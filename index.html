@@ -127,12 +127,20 @@
             const resultsContainer = document.getElementById('results');
             resultsContainer.innerHTML = '';
 
-            if (movies.length === 0) {
+            const currentYear = new Date().getFullYear();
+
+            // Filter out movies released in the future
+            const filteredMovies = movies.filter(movie => {
+                const releaseYear = movie.release_date ? new Date(movie.release_date).getFullYear() : null;
+                return releaseYear && releaseYear <= currentYear;
+            });
+
+            if (filteredMovies.length === 0) {
                 resultsContainer.innerHTML = '<li>No results found</li>';
                 return;
             }
 
-            movies.forEach(movie => {
+            filteredMovies.forEach(movie => {
                 const listItem = document.createElement('li');
                 listItem.classList.add('result-item');
 
@@ -216,18 +224,16 @@
                     movieInfo += `<p><strong>Trailer:</strong> <a href="https://www.youtube.com/watch?v=${trailerKey}" target="_blank">Watch Trailer</a></p>`;
                 }
 
-                const similarMoviesResponse = await fetch(`https://api.themoviedb.org/3/movie/${movieId}/similar?api_key=${apiKey}&language=en-US`);
+                const similarMoviesResponse = await fetch(`https://api.themoviedb.org/3/movie/${movieId}/similar?api_key=${apiKey}&language=en-US&page=1`);
                 const similarMoviesData = await similarMoviesResponse.json();
-                const similarMovies = similarMoviesData.results.slice(0, 5);
 
-                movieInfo += `<h3>Similar Movies:</h3><ul>`;
-                similarMovies.forEach(similarMovie => {
+                movieInfo += '<h3>Similar Movies</h3><ul>';
+                similarMoviesData.results.forEach(similarMovie => {
                     movieInfo += `<li>${similarMovie.title}</li>`;
                 });
-                movieInfo += `</ul>`;
+                movieInfo += '</ul>';
 
                 document.body.innerHTML = movieInfo;
-
             } catch (error) {
                 console.error('Error fetching movie details:', error);
             }
