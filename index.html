@@ -51,15 +51,29 @@
     <p>Find out where to stream your favorite movies and TV shows in Canada</p>
   </header>
   
-  <div id="show-list"></div>
+  <div id="show-list">Loading...</div> <!-- Loading text initially displayed -->
 
   <script>
     // Fetch popular shows and movies available in Canada from the JustWatch API (Unofficial)
     fetch('https://apis.justwatch.com/content/titles/en_CA/popular?body={"page_size":20}')
-      .then(response => response.json())
+      .then(response => {
+        // Check if the response is successful
+        if (!response.ok) {
+          throw new Error('Network response was not ok ' + response.statusText);
+        }
+        return response.json();
+      })
       .then(data => {
+        // Check if data is available
+        if (!data || !data.items || data.items.length === 0) {
+          throw new Error('No items found in the response');
+        }
+
         const shows = data.items; // Array of shows and movies
         const showList = document.getElementById('show-list'); // The container to display shows
+
+        // Clear the loading text
+        showList.innerHTML = '';
 
         // Loop through the shows and display them on the page
         shows.forEach(show => {
@@ -74,7 +88,12 @@
           showList.appendChild(showSection);
         });
       })
-      .catch(error => console.log('Error:', error)); // Handle errors if any
+      .catch(error => {
+        // Display the error message
+        const showList = document.getElementById('show-list');
+        showList.innerHTML = `Error: ${error.message}`; // Show error message
+        console.log('Error:', error); // Log the error for debugging
+      });
   </script>
 </body>
 </html>
