@@ -101,7 +101,7 @@
         }
 
         /* Pagination button styling */
-        .page-btn, .next-prev-btn {
+        .next-prev-btn {
             padding: 10px 15px;
             margin: 0 5px;
             font-size: 1rem;
@@ -112,18 +112,13 @@
             cursor: pointer;
         }
 
-        .page-btn:hover, .next-prev-btn:hover {
+        .next-prev-btn:hover {
             background-color: #e67e22;
         }
 
-        .page-btn.active {
-            font-weight: bold;
-            border: 2px solid #e67e22;
-        }
-
-        /* Next/Previous Button Styling */
-        .next-prev-btn {
-            font-size: 1.2rem;
+        .next-prev-btn:disabled {
+            background-color: #7f8c8d;
+            cursor: not-allowed;
         }
     </style>
 </head>
@@ -212,7 +207,7 @@
             });
         }
 
-        // Display pagination with Next/Previous buttons
+        // Display pagination with only Next/Previous buttons
         function displayPagination() {
             const pagination = document.getElementById('pagination');
             pagination.innerHTML = '';
@@ -229,22 +224,6 @@
                 }
             });
             pagination.appendChild(prevButton);
-
-            // Page buttons
-            let startPage = Math.max(1, currentPage - 2);
-            let endPage = Math.min(totalPages, currentPage + 2);
-
-            for (let i = startPage; i <= endPage; i++) {
-                const button = document.createElement('button');
-                button.textContent = i;
-                button.className = 'page-btn';
-                if (i === currentPage) button.classList.add('active');
-                button.addEventListener('click', () => {
-                    currentPage = i;
-                    fetchResults(i);
-                });
-                pagination.appendChild(button);
-            }
 
             // Next button
             const nextButton = document.createElement('button');
