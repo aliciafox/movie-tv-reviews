@@ -119,7 +119,9 @@
         <select id="genreSelect">
             <option value="">Select Genre</option>
         </select>
-        <input type="number" id="yearInput" placeholder="Year (e.g. 2020)">
+        <select id="yearSelect">
+            <option value="">Select Year</option>
+        </select>
         <input type="number" id="ratingInput" placeholder="Rating (1-10)" step="1">
         <button onclick="fetchResults()">Search</button>
         <ul id="results"></ul>
@@ -154,11 +156,22 @@
             }
         }
 
+        // Fetch and populate years
+        function populateYearSelect() {
+            const yearSelect = document.getElementById('yearSelect');
+            for (let year = 1920; year <= currentYear; year++) {
+                const option = document.createElement('option');
+                option.value = year;
+                option.textContent = year;
+                yearSelect.appendChild(option);
+            }
+        }
+
         // Fetch results based on filters and display them
         async function fetchResults(page = 1) {
             const searchInput = document.getElementById('searchInput').value;
             const genreInput = document.getElementById('genreSelect').value;
-            const yearInput = document.getElementById('yearInput').value;
+            const yearInput = document.getElementById('yearSelect').value;
             const ratingInput = document.getElementById('ratingInput').value;
 
             let query = `${API_URL}/discover/movie?api_key=${API_KEY}&language=en-US&page=${page}&include_adult=false&sort_by=release_date.desc`;
@@ -240,8 +253,8 @@
         window.onload = () => {
             fetchResults(1); // Automatically load the first page of movies on page load
             fetchGenres();  // Populate genre dropdown
+            populateYearSelect();  // Populate year dropdown
         };
     </script>
 </body>
 </html>
-
