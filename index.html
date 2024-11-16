@@ -3,88 +3,58 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Movie & TV Show Tracker</title>
+  <title>Movie & TV Show Finder</title>
   <style>
     body {
       font-family: Arial, sans-serif;
-      background-color: #f0f0f0;
       margin: 0;
       padding: 0;
+      background-color: #f0f0f0;
+      color: #333;
     }
     header {
       background-color: #333;
       color: white;
-      padding: 10px 0;
+      padding: 20px;
       text-align: center;
     }
     #show-list {
-      display: flex;
-      flex-wrap: wrap;
-      justify-content: center;
-      margin-top: 20px;
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
       gap: 20px;
+      padding: 20px;
+      margin: 0 auto;
     }
     .show {
       background-color: white;
-      padding: 20px;
-      width: 200px;
-      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-      border-radius: 10px;
-      text-align: center;
-      transition: transform 0.2s;
+      padding: 10px;
+      border-radius: 8px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
     }
-    .show:hover {
-      transform: scale(1.05);
-    }
-    img {
-      width: 100%;
+    .show img {
+      max-width: 100%;
       border-radius: 8px;
     }
-    h3 {
-      margin-top: 10px;
+    .show h3 {
+      font-size: 18px;
+      margin: 10px 0;
     }
-    p {
+    .show p {
       font-size: 14px;
-      color: #555;
+      color: #666;
     }
   </style>
 </head>
 <body>
-
   <header>
-    <h1>Movie & TV Show Tracker</h1>
-    <p>Find shows and see where to stream them!</p>
+    <h1>Popular Shows and Movies (Canada)</h1>
+    <p>Find out where to stream your favorite movies and TV shows in Canada</p>
   </header>
-
+  
   <div id="show-list"></div>
 
   <script>
-    const apiKey = '3f2fe61ae14a656e1ad11ff26b0d0594'; // Your TMDb API Key
-
-    // Fetch shows from TMDb
-    fetch(`https://api.themoviedb.org/3/discover/tv?api_key=${apiKey}&language=en-US`)
+    // Fetch popular shows and movies available in Canada from the JustWatch API (Unofficial)
+    fetch('https://apis.justwatch.com/content/titles/en_CA/popular?body={"page_size": 20}')
       .then(response => response.json())
-      .then(data => {
-        const shows = data.results; // Array of TV shows from the API
-        const showList = document.getElementById('show-list');
-        
-        shows.forEach(show => {
-          const showSection = document.createElement('section');
-          showSection.classList.add('show');
-          
-          // Display show details
-          showSection.innerHTML = `
-            <img src="https://image.tmdb.org/t/p/w500/${show.poster_path}" alt="${show.name} Poster">
-            <h3>${show.name}</h3>
-            <p>${show.overview.slice(0, 100)}...</p>
-            <p><strong>Recommendation:</strong> Check it out!</p>
-          `;
-          
-          showList.appendChild(showSection);
-        });
-      })
-      .catch(error => console.log('Error fetching data: ', error));
-  </script>
-
-</body>
-</html>
+      .then(data =
