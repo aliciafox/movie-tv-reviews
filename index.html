@@ -46,6 +46,21 @@
             padding: 5px 10px;
             margin: 0 5px;
             cursor: pointer;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+        }
+        .page-btn:hover {
+            background-color: #0056b3;
+        }
+        .page-btn:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
+        .page-btn.selected {
+            font-weight: bold;
+            background-color: #0056b3;
         }
     </style>
 </head>
@@ -173,32 +188,34 @@
             const paginationContainer = document.getElementById('pagination');
             paginationContainer.innerHTML = '';
 
-            if (currentPage > 1) {
-                const prevButton = document.createElement('button');
-                prevButton.classList.add('page-btn');
-                prevButton.textContent = 'Previous';
-                prevButton.onclick = () => fetchResults(currentPage - 1);
-                paginationContainer.appendChild(prevButton);
-            }
+            // Previous button
+            const prevButton = document.createElement('button');
+            prevButton.classList.add('page-btn');
+            prevButton.textContent = 'Previous';
+            prevButton.disabled = currentPage === 1;
+            prevButton.onclick = () => fetchResults(currentPage - 1);
+            paginationContainer.appendChild(prevButton);
 
+            // Page numbers
+            const pageButtons = document.createElement('div');
+            pageButtons.style.display = 'inline-block';
             for (let i = 1; i <= totalPages; i++) {
                 const pageButton = document.createElement('button');
                 pageButton.classList.add('page-btn');
                 pageButton.textContent = i;
+                pageButton.classList.toggle('selected', i === currentPage);
                 pageButton.onclick = () => fetchResults(i);
-                if (i === currentPage) {
-                    pageButton.style.fontWeight = 'bold';
-                }
-                paginationContainer.appendChild(pageButton);
+                pageButtons.appendChild(pageButton);
             }
+            paginationContainer.appendChild(pageButtons);
 
-            if (currentPage < totalPages) {
-                const nextButton = document.createElement('button');
-                nextButton.classList.add('page-btn');
-                nextButton.textContent = 'Next';
-                nextButton.onclick = () => fetchResults(currentPage + 1);
-                paginationContainer.appendChild(nextButton);
-            }
+            // Next button
+            const nextButton = document.createElement('button');
+            nextButton.classList.add('page-btn');
+            nextButton.textContent = 'Next';
+            nextButton.disabled = currentPage === totalPages;
+            nextButton.onclick = () => fetchResults(currentPage + 1);
+            paginationContainer.appendChild(nextButton);
         }
 
         // Show details of selected movie
@@ -216,12 +233,12 @@
                     <h2>${movieDetails.title}</h2>
                     <p><strong>Overview:</strong> ${movieDetails.overview}</p>
                     <p><strong>Release Date:</strong> ${movieDetails.release_date}</p>
-                    <p><strong>Genres:</strong> ${movieDetails.genres.map(genre => genre.name).join(', ')}</p>
-                    <p><strong>Rating:</strong> ${Math.round(movieDetails.vote_average)}</p>
+                    <p><strong>Genres:</strong> ${movieDetails.genres.map(g => g.name).join(', ')}</p>
+                    <p><strong>Rating:</strong> ${movieDetails.vote_average}</p>
                 `;
 
                 if (trailerKey) {
-                    movieInfo += `<p><strong>Trailer:</strong> <a href="https://www.youtube.com/watch?v=${trailerKey}" target="_blank">Watch Trailer</a></p>`;
+                    movieInfo += `<h3>Trailer</h3><iframe width="560" height="315" src="https://www.youtube.com/embed/${trailerKey}" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>`;
                 }
 
                 const similarMoviesResponse = await fetch(`https://api.themoviedb.org/3/movie/${movieId}/similar?api_key=${apiKey}&language=en-US&page=1`);
