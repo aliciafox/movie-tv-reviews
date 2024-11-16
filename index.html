@@ -70,33 +70,41 @@
         
         let currentPage = 1; // Initial page
         let totalPages = 1; // To keep track of total pages
-        
+        let genres = []; // To store genres
+
         // Fetch genres from TMDb API to populate the genre dropdown
         async function fetchGenres() {
-            const response = await fetch(apiUrl + genresEndpoint);
-            const data = await response.json();
-            const genreSelect = document.getElementById('genreSelect');
-            
-            if (!genreSelect) {
-                console.error('Genre select element not found!');
-                return;
-            }
+            try {
+                const response = await fetch(apiUrl + genresEndpoint);
+                const data = await response.json();
 
-            data.genres.forEach(genre => {
-                const option = document.createElement('option');
-                option.value = genre.id;
-                option.textContent = genre.name;
-                genreSelect.appendChild(option);
-            });
+                if (data.genres) {
+                    genres = data.genres;
+                    const genreSelect = document.getElementById('genreSelect');
+                    genres.forEach(genre => {
+                        const option = document.createElement('option');
+                        option.value = genre.id;
+                        option.textContent = genre.name;
+                        genreSelect.appendChild(option);
+                    });
+                }
+            } catch (error) {
+                console.error('Error fetching genres:', error);
+            }
         }
 
         // Function to fetch movie/show results based on user input
         async function fetchResults(page = 1) {
             currentPage = page;
-            const searchQuery = document.getElementById('searchInput') ? document.getElementById('searchInput').value : '';
-            const genre = document.getElementById('genreSelect') ? document.getElementById('genreSelect').value : '';
-            const year = document.getElementById('yearInput') ? document.getElementById('yearInput').value : '';
-            const rating = document.getElementById('ratingInput') ? document.getElementById('ratingInput').value : '';
+            const searchInput = document.getElementById('searchInput');
+            const genreSelect = document.getElementById('genreSelect');
+            const yearInput = document.getElementById('yearInput');
+            const ratingInput = document.getElementById('ratingInput');
+            
+            const searchQuery = searchInput ? searchInput.value : '';
+            const genre = genreSelect ? genreSelect.value : '';
+            const year = yearInput ? yearInput.value : '';
+            const rating = ratingInput ? ratingInput.value : '';
 
             let url = apiUrl + 'search/movie?api_key=' + apiKey + '&query=' + searchQuery + '&language=en-US&page=' + currentPage + '&include_adult=false';
 
@@ -104,12 +112,15 @@
             if (year) url += '&year=' + year;
             if (rating) url += '&vote_average.gte=' + rating; // Filters for ratings greater than or equal to the provided value
 
-            const response = await fetch(url);
-            const data = await response.json();
-
-            totalPages = data.total_pages; // Get the total number of pages
-            displayResults(data.results);
-            displayPagination();
+            try {
+                const response = await fetch(url);
+                const data = await response.json();
+                totalPages = data.total_pages; // Get the total number of pages
+                displayResults(data.results);
+                displayPagination();
+            } catch (error) {
+                console.error('Error fetching results:', error);
+            }
         }
 
         // Function to display search results on the page
@@ -129,8 +140,8 @@
                 const imageUrl = item.poster_path ? 'https://image.tmdb.org/t/p/w200' + item.poster_path : 'https://via.placeholder.com/100x150';
                 
                 // Get genre names for each movie/show
-                const genres = item.genre_ids.map(genreId => {
-                    const genre = data.genres.find(genre => genre.id === genreId);
+                const genresForItem = item.genre_ids.map(genreId => {
+                    const genre = genres.find(genre => genre.id === genreId);
                     return genre ? genre.name : 'Unknown';
                 }).join(', ');
 
@@ -139,7 +150,7 @@
                     <div>
                         <h3>${item.title}</h3>
                         <p><strong>Release Date:</strong> ${item.release_date || 'N/A'}</p>
-                        <p><strong>Genres:</strong> ${genres}</p>
+                        <p><strong>Genres:</strong> ${genresForItem}</p>
                         <p><strong>Rating:</strong> ${item.vote_average || 'N/A'}</p>
                         <p><strong>Overview:</strong> ${item.overview || 'No description available.'}</p>
                     </div>
