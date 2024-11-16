@@ -55,6 +55,26 @@
 
   <script>
     // Fetch popular shows and movies available in Canada from the JustWatch API (Unofficial)
-    fetch('https://apis.justwatch.com/content/titles/en_CA/popular?body={"page_size": 20}')
+    fetch('https://apis.justwatch.com/content/titles/en_CA/popular?body={"page_size":20}')
       .then(response => response.json())
-      .then(data =
+      .then(data => {
+        const shows = data.items; // Array of shows and movies
+        const showList = document.getElementById('show-list'); // The container to display shows
+
+        // Loop through the shows and display them on the page
+        shows.forEach(show => {
+          const showSection = document.createElement('section');
+          showSection.classList.add('show');
+          showSection.innerHTML = `
+            <img src="${show.poster_url}" alt="${show.title}">
+            <h3>${show.title}</h3>
+            <p>Available on: ${show.offers ? show.offers[0].provider_id : 'Unknown'}</p>
+            <p>${show.short_description ? show.short_description : 'No description available.'}</p>
+          `;
+          showList.appendChild(showSection);
+        });
+      })
+      .catch(error => console.log('Error:', error)); // Handle errors if any
+  </script>
+</body>
+</html>
