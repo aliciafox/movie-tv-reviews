@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Movie Search</title>
+    <title>Movies & TV Shows</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -16,21 +16,22 @@
             max-width: 400px;
         }
         #results {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
             list-style-type: none;
             padding: 0;
         }
         .result-item {
-            display: flex;
             border: 1px solid #ddd;
             margin: 10px 0;
             padding: 10px;
-            background-color: #f9f9f9;
+            max-width: 200px;
         }
         .result-item img {
-            width: 100px;
-            height: 150px;
+            width: 100%;
+            height: auto;
             object-fit: cover;
-            margin-right: 15px;
         }
         .result-item h3 {
             margin: 0;
@@ -39,226 +40,157 @@
             margin: 5px 0;
         }
         #pagination {
-            text-align: center;
+            display: flex;
+            justify-content: center;
             margin-top: 20px;
         }
         .page-btn {
-            padding: 5px 10px;
-            margin: 0 5px;
+            padding: 10px;
+            margin: 5px;
+            border: 1px solid #ddd;
             cursor: pointer;
-            background-color: #007bff;
-            color: white;
-            border: none;
-            border-radius: 4px;
         }
-        .page-btn:hover {
-            background-color: #0056b3;
-        }
-        .page-btn:disabled {
-            background-color: #ccc;
-            cursor: not-allowed;
-        }
-        .page-btn.selected {
+        .page-btn.active {
+            background-color: #ddd;
             font-weight: bold;
-            background-color: #0056b3;
         }
     </style>
 </head>
 <body>
     <h1>Search for Movies</h1>
-    
-    <!-- Search Filters -->
-    <input type="text" id="searchInput" placeholder="Search by title..." onkeyup="fetchResults()">
-    <select id="genreSelect" onchange="fetchResults()">
+    <input type="text" id="searchInput" placeholder="Search by title..." onkeyup="fetchResults(1)">
+    <select id="genreSelect" onchange="fetchResults(1)">
         <option value="">Select Genre</option>
-        <!-- Genres will be populated by TMDb API -->
     </select>
-    <input type="number" id="yearInput" placeholder="Year (e.g. 2020)" onkeyup="fetchResults()">
-    <input type="number" id="ratingInput" placeholder="Rating (1-10)" step="1" min="1" max="10" onkeyup="fetchResults()">
+    <input type="number" id="yearInput" placeholder="Year (e.g., 2020)" onkeyup="fetchResults(1)">
+    <input type="number" id="ratingInput" placeholder="Rating (e.g., 7)" min="1" max="10" onkeyup="fetchResults(1)">
 
-    <h2>Movie Results</h2>
     <ul id="results"></ul>
-
-    <!-- Pagination -->
     <div id="pagination"></div>
 
     <script>
         const apiKey = '3f2fe61ae14a656e1ad11ff26b0d0594';
         const apiUrl = 'https://api.themoviedb.org/3/';
-        const genresEndpoint = 'genre/movie/list?api_key=' + apiKey + '&language=en-US';
-        
         let currentPage = 1;
         let totalPages = 1;
-        let genres = [];
 
-        // Fetch genres for dropdown
+        const currentYear = new Date().getFullYear();
+
         async function fetchGenres() {
-            try {
-                const response = await fetch(apiUrl + genresEndpoint);
-                const data = await response.json();
-                if (data.genres) {
-                    genres = data.genres;
-                    const genreSelect = document.getElementById('genreSelect');
-                    genres.forEach(genre => {
-                        const option = document.createElement('option');
-                        option.value = genre.id;
-                        option.textContent = genre.name;
-                        genreSelect.appendChild(option);
-                    });
-                }
-            } catch (error) {
-                console.error('Error fetching genres:', error);
-            }
+            const response = await fetch(`${apiUrl}genre/movie/list?api_key=${apiKey}&language=en-US`);
+            const data = await response.json();
+            const genreSelect = document.getElementById('genreSelect');
+            genreSelect.innerHTML = '<option value="">Select Genre</option>';
+            data.genres.forEach(genre => {
+                const option = document.createElement('option');
+                option.value = genre.id;
+                option.textContent = genre.name;
+                genreSelect.appendChild(option);
+            });
         }
 
-        // Fetch results based on filters
         async function fetchResults(page = 1) {
             currentPage = page;
-            const searchInput = document.getElementById('searchInput').value;
-            const genreSelect = document.getElementById('genreSelect').value;
-            const yearInput = document.getElementById('yearInput').value;
-            const ratingInput = document.getElementById('ratingInput').value;
+            const searchQuery = document.getElementById('searchInput').value;
+            const genre = document.getElementById('genreSelect').value;
+            const year = document.getElementById('yearInput').value;
+            const rating = document.getElementById('ratingInput').value;
 
-            let url = apiUrl + 'discover/movie?api_key=' + apiKey + '&language=en-US&page=' + currentPage + '&sort_by=release_date.desc';
+            let url = `${apiUrl}discover/movie?api_key=${apiKey}&language=en-US&sort_by=release_date.desc&page=${page}&vote_count.gte=10&release_date.lte=${currentYear}-12-31`;
 
-            if (searchInput) url += '&query=' + searchInput;
-            if (genreSelect) url += '&with_genres=' + genreSelect;
-            if (yearInput) url += '&year=' + yearInput;
-            if (ratingInput) url += '&vote_average.gte=' + ratingInput;
+            if (searchQuery) url += `&query=${encodeURIComponent(searchQuery)}`;
+            if (genre) url += `&with_genres=${genre}`;
+            if (year) url += `&primary_release_year=${year}`;
+            if (rating) url += `&vote_average.gte=${rating}`;
 
-            try {
-                const response = await fetch(url);
-                const data = await response.json();
-                totalPages = data.total_pages;
-                displayResults(data.results);
-                displayPagination();
-            } catch (error) {
-                console.error('Error fetching results:', error);
-            }
+            const response = await fetch(url);
+            const data = await response.json();
+            totalPages = data.total_pages;
+
+            displayResults(data.results);
+            displayPagination();
         }
 
-        // Display movie results
-        function displayResults(movies) {
+        function displayResults(results) {
             const resultsContainer = document.getElementById('results');
             resultsContainer.innerHTML = '';
 
-            const currentYear = new Date().getFullYear();
-
-            // Filter out movies released in the future
-            const filteredMovies = movies.filter(movie => {
-                const releaseYear = movie.release_date ? new Date(movie.release_date).getFullYear() : null;
-                return releaseYear && releaseYear <= currentYear;
-            });
-
-            if (filteredMovies.length === 0) {
-                resultsContainer.innerHTML = '<li>No results found</li>';
+            if (!results.length) {
+                resultsContainer.innerHTML = '<p>No results found.</p>';
                 return;
             }
 
-            filteredMovies.forEach(movie => {
+            results.forEach(item => {
+                const genres = item.genre_ids.map(id => getGenreName(id)).join(', ') || 'Unknown Genre';
+                const roundedRating = Math.round(item.vote_average);
+                const releaseYear = item.release_date ? item.release_date.split('-')[0] : 'Unknown';
+
                 const listItem = document.createElement('li');
                 listItem.classList.add('result-item');
 
-                const imageUrl = movie.poster_path ? 'https://image.tmdb.org/t/p/w200' + movie.poster_path : 'https://via.placeholder.com/100x150';
-                const releaseYear = movie.release_date ? new Date(movie.release_date).getFullYear() : 'N/A';
-                const rating = movie.vote_average ? Math.round(movie.vote_average) : 'N/A';
-
-                // Get genre names for movie
-                const genresForMovie = movie.genre_ids.map(genreId => {
-                    const genre = genres.find(genre => genre.id === genreId);
-                    return genre ? genre.name : 'Unknown';
-                }).join(', ');
-
+                const posterUrl = item.poster_path ? `https://image.tmdb.org/t/p/w200${item.poster_path}` : 'https://via.placeholder.com/200x300';
                 listItem.innerHTML = `
-                    <img src="${imageUrl}" alt="${movie.title}">
-                    <div>
-                        <h3>${movie.title}</h3>
-                        <p><strong>Release Year:</strong> ${releaseYear}</p>
-                        <p><strong>Rating:</strong> ${rating}</p>
-                        <p><strong>Genres:</strong> ${genresForMovie}</p>
-                        <button onclick="viewDetails(${movie.id})">View Details</button>
-                    </div>
+                    <img src="${posterUrl}" alt="${item.title}">
+                    <h3>${item.title}</h3>
+                    <p><strong>Year:</strong> ${releaseYear}</p>
+                    <p><strong>Rating:</strong> ${roundedRating}/10</p>
+                    <p><strong>Genre:</strong> ${genres}</p>
+                    <button onclick="viewDetails(${item.id})">View Details</button>
                 `;
                 resultsContainer.appendChild(listItem);
             });
         }
 
-        // Display pagination
+        async function viewDetails(movieId) {
+            const response = await fetch(`${apiUrl}movie/${movieId}?api_key=${apiKey}&append_to_response=videos`);
+            const data = await response.json();
+
+            const genres = data.genres.map(genre => genre.name).join(', ') || 'Unknown Genre';
+            const trailer = data.videos.results.find(video => video.type === 'Trailer' && video.site === 'YouTube');
+            const trailerLink = trailer ? `<a href="https://www.youtube.com/watch?v=${trailer.key}" target="_blank">Watch Trailer</a>` : 'Trailer not available';
+
+            alert(`
+                Title: ${data.title}
+                Overview: ${data.overview || 'No overview available.'}
+                Year: ${data.release_date ? data.release_date.split('-')[0] : 'Unknown'}
+                Rating: ${Math.round(data.vote_average)}/10
+                Genres: ${genres}
+                ${trailerLink}
+            `);
+        }
+
         function displayPagination() {
             const paginationContainer = document.getElementById('pagination');
             paginationContainer.innerHTML = '';
 
-            // Previous button
-            const prevButton = document.createElement('button');
-            prevButton.classList.add('page-btn');
-            prevButton.textContent = 'Previous';
-            prevButton.disabled = currentPage === 1;
-            prevButton.onclick = () => fetchResults(currentPage - 1);
-            paginationContainer.appendChild(prevButton);
-
-            // Page numbers
-            const pageButtons = document.createElement('div');
-            pageButtons.style.display = 'inline-block';
-            for (let i = 1; i <= totalPages; i++) {
-                const pageButton = document.createElement('button');
-                pageButton.classList.add('page-btn');
-                pageButton.textContent = i;
-                pageButton.classList.toggle('selected', i === currentPage);
-                pageButton.onclick = () => fetchResults(i);
-                pageButtons.appendChild(pageButton);
+            if (currentPage > 1) {
+                const prevButton = document.createElement('button');
+                prevButton.classList.add('page-btn');
+                prevButton.textContent = 'Previous';
+                prevButton.onclick = () => fetchResults(currentPage - 1);
+                paginationContainer.appendChild(prevButton);
             }
-            paginationContainer.appendChild(pageButtons);
 
-            // Next button
-            const nextButton = document.createElement('button');
-            nextButton.classList.add('page-btn');
-            nextButton.textContent = 'Next';
-            nextButton.disabled = currentPage === totalPages;
-            nextButton.onclick = () => fetchResults(currentPage + 1);
-            paginationContainer.appendChild(nextButton);
-        }
-
-        // Show details of selected movie
-        async function viewDetails(movieId) {
-            const url = `https://api.themoviedb.org/3/movie/${movieId}?api_key=${apiKey}&language=en-US`;
-            try {
-                const response = await fetch(url);
-                const movieDetails = await response.json();
-
-                const trailerResponse = await fetch(`https://api.themoviedb.org/3/movie/${movieId}/videos?api_key=${apiKey}&language=en-US`);
-                const trailerData = await trailerResponse.json();
-                const trailerKey = trailerData.results.length > 0 ? trailerData.results[0].key : null;
-
-                let movieInfo = `
-                    <h2>${movieDetails.title}</h2>
-                    <p><strong>Overview:</strong> ${movieDetails.overview}</p>
-                    <p><strong>Release Date:</strong> ${movieDetails.release_date}</p>
-                    <p><strong>Genres:</strong> ${movieDetails.genres.map(g => g.name).join(', ')}</p>
-                    <p><strong>Rating:</strong> ${movieDetails.vote_average}</p>
-                `;
-
-                if (trailerKey) {
-                    movieInfo += `<h3>Trailer</h3><iframe width="560" height="315" src="https://www.youtube.com/embed/${trailerKey}" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>`;
-                }
-
-                const similarMoviesResponse = await fetch(`https://api.themoviedb.org/3/movie/${movieId}/similar?api_key=${apiKey}&language=en-US&page=1`);
-                const similarMoviesData = await similarMoviesResponse.json();
-
-                movieInfo += '<h3>Similar Movies</h3><ul>';
-                similarMoviesData.results.forEach(similarMovie => {
-                    movieInfo += `<li>${similarMovie.title}</li>`;
-                });
-                movieInfo += '</ul>';
-
-                document.body.innerHTML = movieInfo;
-            } catch (error) {
-                console.error('Error fetching movie details:', error);
+            if (currentPage < totalPages) {
+                const nextButton = document.createElement('button');
+                nextButton.classList.add('page-btn');
+                nextButton.textContent = 'Next';
+                nextButton.onclick = () => fetchResults(currentPage + 1);
+                paginationContainer.appendChild(nextButton);
             }
         }
 
-        // Initialize the app
-        fetchGenres();
-        fetchResults();
+        const genreMap = new Map();
+        function getGenreName(id) {
+            return genreMap.get(id) || 'Unknown';
+        }
+
+        async function init() {
+            await fetchGenres();
+            fetchResults();
+        }
+
+        init();
     </script>
 </body>
 </html>
