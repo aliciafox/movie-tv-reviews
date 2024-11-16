@@ -168,7 +168,7 @@
             const yearInput = document.getElementById('yearInput').value;
             const ratingInput = document.getElementById('ratingInput').value;
 
-            let query = `${API_URL}/discover/movie?api_key=${API_KEY}&language=en-US&page=${page}&include_adult=false`;
+            let query = `${API_URL}/discover/movie?api_key=${API_KEY}&language=en-US&page=${page}&include_adult=false&sort_by=release_date.desc`;
             if (searchInput) query += `&query=${searchInput}`;
             if (genreInput) query += `&with_genres=${genreInput}`;
             if (yearInput) query += `&primary_release_year=${yearInput}`;
@@ -251,8 +251,11 @@
             return genres[id] || 'Unknown';
         }
 
-        // Initial setup
-        fetchGenres();
+        // Fetch latest movies on page load
+        window.onload = () => {
+            fetchResults(); // Automatically load latest movies
+            fetchGenres();  // Populate genre dropdown
+        };
     </script>
 </body>
 </html>
