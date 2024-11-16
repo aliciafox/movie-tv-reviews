@@ -132,7 +132,7 @@
                 listItem.classList.add('result-item');
                 
                 const imageUrl = item.poster_path ? 'https://image.tmdb.org/t/p/w200' + item.poster_path : 'https://via.placeholder.com/100x150';
-                listItem.innerHTML = `
+                listItem.innerHTML = ` 
                     <img src="${imageUrl}" alt="${item.title}">
                     <div>
                         <h3>${item.title}</h3>
