@@ -3,31 +3,122 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Search Movies</title>
+    <title>Movie & Show Search</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        input, select {
+            padding: 8px;
+            margin: 10px 0;
+            width: 100%;
+            max-width: 400px;
+        }
+        #results {
+            list-style-type: none;
+            padding: 0;
+        }
+        .result-item {
+            border: 1px solid #ddd;
+            margin: 10px 0;
+            padding: 10px;
+        }
+        .result-item img {
+            width: 100px;
+            height: 150px;
+            object-fit: cover;
+            margin-right: 15px;
+        }
+        .result-item h3 {
+            margin: 0;
+        }
+        .result-item p {
+            margin: 5px 0;
+        }
+    </style>
 </head>
 <body>
+    <h1>Search for Movies or Shows</h1>
 
-<h1>Search for Movies or Shows</h1>
+    <input type="text" id="searchInput" placeholder="Search by title..." onkeyup="fetchResults()">
+    <select id="genreSelect" onchange="fetchResults()">
+        <option value="">Select Genre</option>
+        <!-- Genres will be populated by TMDb API -->
+    </select>
+    <input type="number" id="yearInput" placeholder="Year (e.g. 2020)" onkeyup="fetchResults()">
+    <input type="number" id="ratingInput" placeholder="Rating (e.g. 7.5)" step="0.1" onkeyup="fetchResults()">
 
-<form action="/search" method="get">
-    <label for="query">Movie/Show Title:</label>
-    <input type="text" id="query" name="query">
-    <br><br>
-    
-    <label for="genre">Genre:</label>
-    <input type="text" id="genre" name="genre">
-    <br><br>
-    
-    <label for="year">Year Released:</label>
-    <input type="number" id="year" name="year">
-    <br><br>
-    
-    <label for="ratings">Minimum Rotten Tomatoes Rating:</label>
-    <input type="number" id="ratings" name="ratings" min="0" max="100">
-    <br><br>
-    
-    <button type="submit">Search</button>
-</form>
+    <ul id="results"></ul>
 
+    <script>
+        const apiKey = 'YOUR_TMDB_API_KEY'; // Replace with your TMDb API Key
+        const apiUrl = 'https://api.themoviedb.org/3/';
+        const genresEndpoint = 'genre/movie/list?api_key=' + apiKey + '&language=en-US';
+        
+        // Fetch genres from TMDb API to populate the genre dropdown
+        async function fetchGenres() {
+            const response = await fetch(apiUrl + genresEndpoint);
+            const data = await response.json();
+            const genreSelect = document.getElementById('genreSelect');
+            
+            data.genres.forEach(genre => {
+                const option = document.createElement('option');
+                option.value = genre.id;
+                option.textContent = genre.name;
+                genreSelect.appendChild(option);
+            });
+        }
+
+        // Function to fetch movie/show results based on user input
+        async function fetchResults() {
+            const searchQuery = document.getElementById('searchInput').value;
+            const genre = document.getElementById('genreSelect').value;
+            const year = document.getElementById('yearInput').value;
+            const rating = document.getElementById('ratingInput').value;
+
+            let url = apiUrl + 'search/movie?api_key=' + apiKey + '&query=' + searchQuery + '&language=en-US&page=1&include_adult=false';
+
+            if (genre) url += '&with_genres=' + genre;
+            if (year) url += '&year=' + year;
+            if (rating) url += '&vote_average.gte=' + rating; // Filters for ratings greater than or equal to the provided value
+
+            const response = await fetch(url);
+            const data = await response.json();
+
+            displayResults(data.results);
+        }
+
+        // Function to display search results on the page
+        function displayResults(results) {
+            const resultsContainer = document.getElementById('results');
+            resultsContainer.innerHTML = '';
+
+            if (results.length === 0) {
+                resultsContainer.innerHTML = '<li>No results found</li>';
+                return;
+            }
+
+            results.forEach(item => {
+                const listItem = document.createElement('li');
+                listItem.classList.add('result-item');
+                
+                const imageUrl = item.poster_path ? 'https://image.tmdb.org/t/p/w200' + item.poster_path : 'https://via.placeholder.com/100x150';
+                listItem.innerHTML = `
+                    <img src="${imageUrl}" alt="${item.title}">
+                    <div>
+                        <h3>${item.title}</h3>
+                        <p><strong>Release Date:</strong> ${item.release_date || 'N/A'}</p>
+                        <p><strong>Rating:</strong> ${item.vote_average || 'N/A'}</p>
+                        <p><strong>Overview:</strong> ${item.overview || 'No description available.'}</p>
+                    </div>
+                `;
+                resultsContainer.appendChild(listItem);
+            });
+        }
+
+        // Initialize the page by fetching genres when it loads
+        fetchGenres();
+    </script>
 </body>
 </html>
