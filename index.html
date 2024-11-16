@@ -78,21 +78,29 @@
         const genreMap = new Map(); // Stores genre IDs and their names for easy access.
 
         async function fetchGenres() {
-            const response = await fetch(`${apiUrl}genre/movie/list?api_key=${apiKey}&language=en-US`);
-            const data = await response.json();
-            const genreSelect = document.getElementById('genreSelect');
-            genreSelect.innerHTML = '<option value="">Select Genre</option>';
-            data.genres.forEach(genre => {
-                genreMap.set(genre.id, genre.name); // Store genre ID and name in the map.
-                const option = document.createElement('option');
-                option.value = genre.id;
-                option.textContent = genre.name;
-                genreSelect.appendChild(option);
-            });
+            try {
+                const response = await fetch(`${apiUrl}genre/movie/list?api_key=${apiKey}&language=en-US`);
+                const data = await response.json();
+
+                console.log("Fetched genres:", data.genres);
+
+                const genreSelect = document.getElementById('genreSelect');
+                genreSelect.innerHTML = '<option value="">Select Genre</option>';
+                data.genres.forEach(genre => {
+                    genreMap.set(genre.id, genre.name); // Store genre ID and name in the map.
+                    const option = document.createElement('option');
+                    option.value = genre.id;
+                    option.textContent = genre.name;
+                    genreSelect.appendChild(option);
+                });
+            } catch (error) {
+                console.error("Error fetching genres:", error);
+            }
         }
 
         async function fetchResults(page = 1) {
             currentPage = page;
+
             const searchQuery = document.getElementById('searchInput').value;
             const genre = document.getElementById('genreSelect').value;
             const year = document.getElementById('yearInput').value;
@@ -105,12 +113,18 @@
             if (year) url += `&primary_release_year=${year}`;
             if (rating) url += `&vote_average.gte=${rating}`;
 
-            const response = await fetch(url);
-            const data = await response.json();
-            totalPages = data.total_pages;
+            try {
+                const response = await fetch(url);
+                const data = await response.json();
+                totalPages = data.total_pages;
 
-            displayResults(data.results);
-            displayPagination();
+                console.log("Fetched results:", data.results);
+
+                displayResults(data.results);
+                displayPagination();
+            } catch (error) {
+                console.error("Error fetching results:", error);
+            }
         }
 
         function displayResults(results) {
@@ -123,7 +137,10 @@
             }
 
             results.forEach(item => {
-                const genres = item.genre_ids.map(id => genreMap.get(id)).join(', ') || 'Unknown Genre';
+                const genres = item.genre_ids
+                    .map(id => genreMap.get(id))
+                    .filter(Boolean)
+                    .join(', ') || 'Unknown Genre';
                 const roundedRating = Math.round(item.vote_average);
                 const releaseYear = item.release_date ? item.release_date.split('-')[0] : 'Unknown';
 
@@ -144,21 +161,25 @@
         }
 
         async function viewDetails(movieId) {
-            const response = await fetch(`${apiUrl}movie/${movieId}?api_key=${apiKey}&append_to_response=videos`);
-            const data = await response.json();
+            try {
+                const response = await fetch(`${apiUrl}movie/${movieId}?api_key=${apiKey}&append_to_response=videos`);
+                const data = await response.json();
 
-            const genres = data.genres.map(genre => genre.name).join(', ') || 'Unknown Genre';
-            const trailer = data.videos.results.find(video => video.type === 'Trailer' && video.site === 'YouTube');
-            const trailerLink = trailer ? `<a href="https://www.youtube.com/watch?v=${trailer.key}" target="_blank">Watch Trailer</a>` : 'Trailer not available';
+                const genres = data.genres.map(genre => genre.name).join(', ') || 'Unknown Genre';
+                const trailer = data.videos.results.find(video => video.type === 'Trailer' && video.site === 'YouTube');
+                const trailerLink = trailer ? `<a href="https://www.youtube.com/watch?v=${trailer.key}" target="_blank">Watch Trailer</a>` : 'Trailer not available';
 
-            alert(`
-                Title: ${data.title}
-                Overview: ${data.overview || 'No overview available.'}
-                Year: ${data.release_date ? data.release_date.split('-')[0] : 'Unknown'}
-                Rating: ${Math.round(data.vote_average)}/10
-                Genres: ${genres}
-                ${trailerLink}
-            `);
+                alert(`
+                    Title: ${data.title}
+                    Overview: ${data.overview || 'No overview available.'}
+                    Year: ${data.release_date ? data.release_date.split('-')[0] : 'Unknown'}
+                    Rating: ${Math.round(data.vote_average)}/10
+                    Genres: ${genres}
+                    ${trailerLink}
+                `);
+            } catch (error) {
+                console.error("Error fetching details:", error);
+            }
         }
 
         function displayPagination() {
