@@ -104,7 +104,7 @@
             const yearInput = document.getElementById('yearInput').value;
             const ratingInput = document.getElementById('ratingInput').value;
 
-            let url = apiUrl + 'discover/movie?api_key=' + apiKey + '&language=en-US&page=' + currentPage;
+            let url = apiUrl + 'discover/movie?api_key=' + apiKey + '&language=en-US&page=' + currentPage + '&sort_by=release_date.desc';
 
             if (searchInput) url += '&query=' + searchInput;
             if (genreSelect) url += '&with_genres=' + genreSelect;
@@ -239,4 +239,3 @@
     </script>
 </body>
 </html>
-
