@@ -5,26 +5,23 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Movie Search</title>
     <style>
-        /* General styling */
         body {
             font-family: 'Arial', sans-serif;
             margin: 0;
             padding: 0;
-            background-color: #2c3e50; /* Dark blue background */
-            color: #ecf0f1; /* Light text for readability */
+            background-color: #2c3e50;
+            color: #ecf0f1;
         }
 
-        /* Header styling */
         header {
             text-align: center;
             padding: 20px;
-            background-color: #34495e; /* Deep blue-gray for header */
+            background-color: #34495e;
             font-size: 2.5rem;
             font-weight: bold;
-            color: #f39c12; /* Bright orange for the header text */
+            color: #f39c12;
         }
 
-        /* Main content area */
         main {
             max-width: 1200px;
             margin: auto;
@@ -32,11 +29,10 @@
             text-align: center;
         }
 
-        /* Input and button styling */
         input, select, button {
             padding: 10px;
             margin: 10px;
-            width: calc(100% - 20px); /* Dynamic width for smaller devices */
+            width: 100%;
             max-width: 400px;
             font-size: 1.1rem;
             border: none;
@@ -45,17 +41,15 @@
         }
 
         button {
-            background-color: #f39c12; /* Vibrant orange for the button */
+            background-color: #f39c12;
             color: white;
             cursor: pointer;
-            transition: background-color 0.3s ease;
         }
 
         button:hover {
-            background-color: #e67e22; /* Darker orange on hover */
+            background-color: #e67e22;
         }
 
-        /* Results container styling */
         #results {
             display: flex;
             flex-wrap: wrap;
@@ -65,13 +59,11 @@
             margin-top: 20px;
         }
 
-        /* Individual result item styling */
         .result-item {
-            background-color: #34495e; /* Darker background for cards */
+            background-color: #34495e;
             margin: 15px;
             padding: 15px;
             border-radius: 8px;
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
             flex: 1 1 200px;
             max-width: 220px;
             text-align: center;
@@ -93,14 +85,12 @@
             margin: 5px 0;
         }
 
-        /* Pagination container styling */
         #pagination {
             display: flex;
             justify-content: center;
             margin: 20px 0;
         }
 
-        /* Pagination button styling */
         .next-prev-btn {
             padding: 10px 15px;
             margin: 0 5px;
@@ -135,6 +125,7 @@
         <ul id="results"></ul>
         <div id="pagination"></div>
     </main>
+
     <script>
         const API_KEY = '3f2fe61ae14a656e1ad11ff26b0d0594';
         const API_URL = 'https://api.themoviedb.org/3';
@@ -178,6 +169,7 @@
                 const data = await response.json();
 
                 totalPages = data.total_pages;
+                currentPage = page;
                 displayResults(data.results);
                 displayPagination();
             } catch (error) {
@@ -215,8 +207,7 @@
             prevButton.disabled = currentPage === 1;
             prevButton.addEventListener('click', () => {
                 if (currentPage > 1) {
-                    currentPage--;
-                    fetchResults(currentPage);
+                    fetchResults(currentPage - 1);
                 }
             });
             pagination.appendChild(prevButton);
@@ -228,8 +219,7 @@
             nextButton.disabled = currentPage === totalPages;
             nextButton.addEventListener('click', () => {
                 if (currentPage < totalPages) {
-                    currentPage++;
-                    fetchResults(currentPage);
+                    fetchResults(currentPage + 1);
                 }
             });
             pagination.appendChild(nextButton);
@@ -237,7 +227,7 @@
 
         // Fetch latest movies on page load
         window.onload = () => {
-            fetchResults(); // Automatically load latest movies
+            fetchResults(1); // Automatically load the first page of movies on page load
             fetchGenres();  // Populate genre dropdown
         };
     </script>
