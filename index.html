@@ -20,9 +20,11 @@
             padding: 0;
         }
         .result-item {
+            display: flex;
             border: 1px solid #ddd;
             margin: 10px 0;
             padding: 10px;
+            background-color: #f9f9f9;
         }
         .result-item img {
             width: 100px;
@@ -116,7 +118,7 @@
                 const response = await fetch(url);
                 const data = await response.json();
                 totalPages = data.total_pages; // Get the total number of pages
-                displayResults(data.results);
+                displayResults(data.results); // Pass the results to display
                 displayPagination();
             } catch (error) {
                 console.error('Error fetching results:', error);
