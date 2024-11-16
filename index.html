@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Movie & Show Search with Genres and Similar Movies</title>
     <style>
-        /* Add your existing styles here */
         .similar-movies {
             margin-top: 20px;
         }
@@ -58,6 +57,7 @@
             const response = await fetch(apiUrl + genresEndpoint);
             const data = await response.json();
             allGenres = data.genres;  // Store genres for later mapping
+            console.log('Genres:', allGenres); // Log the fetched genres to the console for debugging
             
             const genreSelect = document.getElementById('genreSelect');
             
@@ -134,8 +134,12 @@
 
         // Get genre names by mapping genre_ids to genre names
         function getGenres(genreIds) {
+            // Log the genreIds to debug if they are being passed correctly
+            console.log('Genre IDs:', genreIds);
             return genreIds.map(id => {
                 const genre = allGenres.find(genre => genre.id === id);
+                // Log each genre to see if it matches
+                console.log('Found genre for ID ' + id + ':', genre);
                 return genre ? genre.name : 'Unknown';
             });
         }
@@ -197,12 +201,4 @@
                 nextButton.classList.add('page-btn');
                 nextButton.textContent = 'Next';
                 nextButton.onclick = () => fetchResults(currentPage + 1);
-                paginationContainer.appendChild(nextButton);
-            }
-        }
-
-        fetchTop100();
-        fetchGenres();
-    </script>
-</body>
-</html>
+                paginationContainer.appendChild(next
