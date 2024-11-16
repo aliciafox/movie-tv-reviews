@@ -201,4 +201,13 @@
                 nextButton.classList.add('page-btn');
                 nextButton.textContent = 'Next';
                 nextButton.onclick = () => fetchResults(currentPage + 1);
-                paginationContainer.appendChild(next
+                paginationContainer.appendChild(nextButton);
+            }
+        }
+
+        // Initialize page
+        fetchGenres();  // Fetch genres when the page loads
+        fetchTop100();  // Fetch top movies/shows by default
+    </script>
+</body>
+</html>
