@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Movie & TV Show Finder</title>
+  <title>Popular Shows for Canadian Viewers</title>
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -47,58 +47,42 @@
 </head>
 <body>
   <header>
-    <h1>Popular Shows and Movies (Canada)</h1>
-    <p>Find out where to stream your favorite movies and TV shows in Canada</p>
+    <h1>Popular Shows and Movies for Canadian Viewers</h1>
+    <p>Find out where to stream your favorite movies and TV shows available in Canada</p>
   </header>
   
-  <div id="show-list">Loading...</div> <!-- Loading text initially displayed -->
+  <div id="show-list">Loading...</div>
 
   <script>
-    // Fetch popular shows and movies available in Canada from the JustWatch API (Unofficial)
-    fetch('https://apis.justwatch.com/content/titles/en_CA/popular?body={"page_size":20}')
-      .then(response => {
-        // Log the raw response
-        console.log('API Response:', response);
+    const API_KEY = 'your-tmdb-api-key-here';  // Replace with your TMDb API key
+    const API_URL = `https://api.themoviedb.org/3/discover/movie?api_key=${API_KEY}&sort_by=popularity.desc&page=1&language=en&region=CA`;
 
-        // Check if the response is successful
-        if (!response.ok) {
-          throw new Error('Network response was not ok ' + response.statusText);
-        }
-        return response.json();
-      })
+    // Fetch popular content from TMDb API
+    fetch(API_URL)
+      .then(response => response.json())
       .then(data => {
-        // Log the parsed JSON data
-        console.log('Parsed Data:', data);
-
-        // Check if data is available
-        if (!data || !data.items || data.items.length === 0) {
-          throw new Error('No items found in the response');
-        }
-
-        const shows = data.items; // Array of shows and movies
-        const showList = document.getElementById('show-list'); // The container to display shows
+        const shows = data.results;  // Extract list of movies/shows
+        const showList = document.getElementById('show-list'); // The container for the shows
 
         // Clear the loading text
         showList.innerHTML = '';
 
-        // Loop through the shows and display them on the page
+        // Loop through the results and display them
         shows.forEach(show => {
           const showSection = document.createElement('section');
           showSection.classList.add('show');
           showSection.innerHTML = `
-            <img src="${show.poster_url}" alt="${show.title}">
+            <img src="https://image.tmdb.org/t/p/w500${show.poster_path}" alt="${show.title}">
             <h3>${show.title}</h3>
-            <p>Available on: ${show.offers ? show.offers[0].provider_id : 'Unknown'}</p>
-            <p>${show.short_description ? show.short_description : 'No description available.'}</p>
+            <p>${show.overview}</p>
           `;
           showList.appendChild(showSection);
         });
       })
       .catch(error => {
-        // Display the error message
         const showList = document.getElementById('show-list');
         showList.innerHTML = `Error: ${error.message}`; // Show error message
-        console.log('Error:', error); // Log the error for debugging
+        console.log('Error:', error);  // Log the error for debugging
       });
   </script>
 </body>
