@@ -156,10 +156,10 @@
             }
         }
 
-        // Fetch and populate years
+        // Fetch and populate years (most current year first)
         function populateYearSelect() {
             const yearSelect = document.getElementById('yearSelect');
-            for (let year = 1920; year <= currentYear; year++) {
+            for (let year = currentYear; year >= 1920; year--) {
                 const option = document.createElement('option');
                 option.value = year;
                 option.textContent = year;
