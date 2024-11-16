@@ -101,7 +101,7 @@
         }
 
         /* Pagination button styling */
-        .page-btn {
+        .page-btn, .next-prev-btn {
             padding: 10px 15px;
             margin: 0 5px;
             font-size: 1rem;
@@ -112,13 +112,18 @@
             cursor: pointer;
         }
 
-        .page-btn:hover {
+        .page-btn:hover, .next-prev-btn:hover {
             background-color: #e67e22;
         }
 
         .page-btn.active {
             font-weight: bold;
             border: 2px solid #e67e22;
+        }
+
+        /* Next/Previous Button Styling */
+        .next-prev-btn {
+            font-size: 1.2rem;
         }
     </style>
 </head>
@@ -207,11 +212,25 @@
             });
         }
 
-        // Display pagination
+        // Display pagination with Next/Previous buttons
         function displayPagination() {
             const pagination = document.getElementById('pagination');
             pagination.innerHTML = '';
 
+            // Previous button
+            const prevButton = document.createElement('button');
+            prevButton.textContent = 'Previous';
+            prevButton.className = 'next-prev-btn';
+            prevButton.disabled = currentPage === 1;
+            prevButton.addEventListener('click', () => {
+                if (currentPage > 1) {
+                    currentPage--;
+                    fetchResults(currentPage);
+                }
+            });
+            pagination.appendChild(prevButton);
+
+            // Page buttons
             for (let i = 1; i <= totalPages; i++) {
                 const button = document.createElement('button');
                 button.textContent = i;
@@ -223,19 +242,35 @@
                 });
                 pagination.appendChild(button);
             }
+
+            // Next button
+            const nextButton = document.createElement('button');
+            nextButton.textContent = 'Next';
+            nextButton.className = 'next-prev-btn';
+            nextButton.disabled = currentPage === totalPages;
+            nextButton.addEventListener('click', () => {
+                if (currentPage < totalPages) {
+                    currentPage++;
+                    fetchResults(currentPage);
+                }
+            });
+            pagination.appendChild(nextButton);
         }
 
         // Get genre name by ID
         function getGenreName(id) {
-            const genreSelect = document.getElementById('genreSelect');
-            const option = Array.from(genreSelect.options).find(opt => parseInt(opt.value) === id);
-            return option ? option.textContent : 'Unknown';
+            const genres = {
+                28: 'Action', 12: 'Adventure', 16: 'Animation', 35: 'Comedy',
+                80: 'Crime', 99: 'Documentary', 18: 'Drama', 10751: 'Family',
+                14: 'Fantasy', 36: 'History', 27: 'Horror', 10402: 'Music',
+                9648: 'Mystery', 10749: 'Romance', 878: 'Science Fiction', 
+                10770: 'TV Movie', 53: 'Thriller', 10752: 'War', 37: 'Western'
+            };
+            return genres[id] || 'Unknown';
         }
 
-        // Initialize page
+        // Initial setup
         fetchGenres();
-        fetchResults();
     </script>
 </body>
 </html>
-
