@@ -75,6 +75,7 @@
         let totalPages = 1;
 
         const currentYear = new Date().getFullYear();
+        const genreMap = new Map(); // Stores genre IDs and their names for easy access.
 
         async function fetchGenres() {
             const response = await fetch(`${apiUrl}genre/movie/list?api_key=${apiKey}&language=en-US`);
@@ -82,6 +83,7 @@
             const genreSelect = document.getElementById('genreSelect');
             genreSelect.innerHTML = '<option value="">Select Genre</option>';
             data.genres.forEach(genre => {
+                genreMap.set(genre.id, genre.name); // Store genre ID and name in the map.
                 const option = document.createElement('option');
                 option.value = genre.id;
                 option.textContent = genre.name;
@@ -121,7 +123,7 @@
             }
 
             results.forEach(item => {
-                const genres = item.genre_ids.map(id => getGenreName(id)).join(', ') || 'Unknown Genre';
+                const genres = item.genre_ids.map(id => genreMap.get(id)).join(', ') || 'Unknown Genre';
                 const roundedRating = Math.round(item.vote_average);
                 const releaseYear = item.release_date ? item.release_date.split('-')[0] : 'Unknown';
 
@@ -178,11 +180,6 @@
                 nextButton.onclick = () => fetchResults(currentPage + 1);
                 paginationContainer.appendChild(nextButton);
             }
-        }
-
-        const genreMap = new Map();
-        function getGenreName(id) {
-            return genreMap.get(id) || 'Unknown';
         }
 
         async function init() {
