@@ -1,101 +1,38 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Popular Shows for Canadian Viewers</title>
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      margin: 0;
-      padding: 0;
-      background-color: #f0f0f0;
-      color: #333;
-    }
-    header {
-      background-color: #333;
-      color: white;
-      padding: 20px;
-      text-align: center;
-    }
-    #show-list {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-      gap: 20px;
-      padding: 20px;
-      margin: 0 auto;
-    }
-    .show {
-      background-color: white;
-      padding: 10px;
-      border-radius: 8px;
-      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-    }
-    .show img {
-      max-width: 100%;
-      border-radius: 8px;
-    }
-    .show h3 {
-      font-size: 18px;
-      margin: 10px 0;
-    }
-    .show p {
-      font-size: 14px;
-      color: #666;
-    }
-  </style>
-</head>
-<body>
-  <header>
-    <h1>Popular Shows and Movies for Canadian Viewers</h1>
-    <p>Find out where to stream your favorite movies and TV shows available in Canada</p>
-  </header>
-  
-  <div id="show-list">Loading...</div>
+import requests
 
-  <script>
-    const API_KEY = '3f2fe61ae14a656e1ad11ff26b0d0594';  // Your TMDb API key
-    const BASE_API_URL = `https://api.themoviedb.org/3/discover/movie?api_key=${API_KEY}&sort_by=popularity.desc&page=`;
+def fetch_items(api_url, total_items=200, items_per_page=50):
+    # Initialize list to hold all items
+    all_items = []
+    
+    # Calculate how many pages are needed to reach total_items
+    total_pages = total_items // items_per_page
+    if total_items % items_per_page != 0:
+        total_pages += 1  # Add an extra page if not perfectly divisible
 
-    const NUM_PAGES = 3;  // Set how many pages you want to fetch
+    # Loop through each page to fetch data
+    for page in range(1, total_pages + 1):
+        params = {'page': page, 'limit': items_per_page}
+        
+        # Make API request
+        response = requests.get(api_url, params=params)
+        
+        # Check if response is successful
+        if response.status_code == 200:
+            data = response.json()
+            # Assume data['items'] contains the list of items
+            all_items.extend(data['items'])  
+            print(f"Fetched {len(data['items'])} items from page {page}")
+        else:
+            print(f"Error fetching data from page {page}, Status Code: {response.status_code}")
+            break  # Stop if an error occurs
 
-    let allShows = []; // Array to store all the shows
+        # If we already have enough items, stop the loop
+        if len(all_items) >= total_items:
+            break
 
-    // Fetch shows from multiple pages
-    for (let i = 1; i <= NUM_PAGES; i++) {
-      fetch(`${BASE_API_URL}${i}&language=en&region=CA`)
-        .then(response => response.json())
-        .then(data => {
-          const shows = data.results;  // Get the shows from this page
-          allShows = [...allShows, ...shows];  // Append the results to the allShows array
+    print(f"Collected {len(all_items)} items")
+    return all_items
 
-          // Display the shows once all pages are fetched
-          if (i === NUM_PAGES) {
-            displayShows(allShows);
-          }
-        })
-        .catch(error => {
-          console.error('Error fetching data:', error);
-        });
-    }
-
-    // Function to display the shows
-    function displayShows(shows) {
-      const showList = document.getElementById('show-list');
-      showList.innerHTML = '';  // Clear the "Loading..." text
-
-      // Loop through all the shows and display them
-      shows.forEach(show => {
-        const showSection = document.createElement('section');
-        showSection.classList.add('show');
-        showSection.innerHTML = `
-          <img src="https://image.tmdb.org/t/p/w500${show.poster_path}" alt="${show.title}">
-          <h3>${show.title}</h3>
-          <p>${show.overview}</p>
-        `;
-        showList.appendChild(showSection);
-      });
-    }
-  </script>
-</body>
-</html>
+# Usage example
+api_url = "https://api.example.com/items"  # Replace with actual API endpoint
+items = fetch_items(api_url)
