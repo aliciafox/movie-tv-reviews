@@ -57,6 +57,9 @@
     // Fetch popular shows and movies available in Canada from the JustWatch API (Unofficial)
     fetch('https://apis.justwatch.com/content/titles/en_CA/popular?body={"page_size":20}')
       .then(response => {
+        // Log the raw response
+        console.log('API Response:', response);
+
         // Check if the response is successful
         if (!response.ok) {
           throw new Error('Network response was not ok ' + response.statusText);
@@ -64,6 +67,9 @@
         return response.json();
       })
       .then(data => {
+        // Log the parsed JSON data
+        console.log('Parsed Data:', data);
+
         // Check if data is available
         if (!data || !data.items || data.items.length === 0) {
           throw new Error('No items found in the response');
