@@ -1,111 +1,90 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Show & Movie Reviews</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            margin: 0;
-            padding: 0;
-            background-color: #f4f4f4;
-            color: #333;
-        }
-        header {
-            background-color: #333;
-            color: #fff;
-            padding: 1rem 2rem;
-            text-align: center;
-        }
-        header h1 {
-            margin: 0;
-        }
-        main {
-            padding: 2rem;
-        }
-        section {
-            margin-bottom: 2rem;
-        }
-        h2 {
-            margin-bottom: 1rem;
-            color: #444;
-        }
-        .card {
-            background: #fff;
-            padding: 1rem;
-            margin: 1rem 0;
-            border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-        }
-        .card h3 {
-            margin: 0 0 0.5rem;
-        }
-        .card p {
-            margin: 0.5rem 0;
-        }
-        footer {
-            text-align: center;
-            padding: 1rem 0;
-            background-color: #333;
-            color: #fff;
-        }
-        .streaming-links a {
-            text-decoration: none;
-            color: #007BFF;
-        }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Movie & TV Show Tracker</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f0f0f0;
+      margin: 0;
+      padding: 0;
+    }
+    header {
+      background-color: #333;
+      color: white;
+      padding: 10px 0;
+      text-align: center;
+    }
+    #show-list {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      margin-top: 20px;
+      gap: 20px;
+    }
+    .show {
+      background-color: white;
+      padding: 20px;
+      width: 200px;
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+      border-radius: 10px;
+      text-align: center;
+      transition: transform 0.2s;
+    }
+    .show:hover {
+      transform: scale(1.05);
+    }
+    img {
+      width: 100%;
+      border-radius: 8px;
+    }
+    h3 {
+      margin-top: 10px;
+    }
+    p {
+      font-size: 14px;
+      color: #555;
+    }
+  </style>
 </head>
 <body>
-    <header>
-        <h1>Show & Movie Reviews</h1>
-        <p>Your guide to the latest entertainment.</p>
-    </header>
-    <main>
-        <section>
-            <h2>Latest Reviews</h2>
-            <div class="card">
-                <h3>The Marvels (2024)</h3>
-                <p>A fun, action-packed continuation of the Marvel Cinematic Universe. Great for fans of superhero team-ups.</p>
-                <p>⭐ 7.5/10</p>
-            </div>
-            <div class="card">
-                <h3>Gen V (2023)</h3>
-                <p>An edgy, thrilling spinoff of *The Boys*. If you like dark humor and superpowers, this is for you.</p>
-                <p>⭐ 8.2/10</p>
-            </div>
-        </section>
-        <section>
-            <h2>Where to Stream</h2>
-            <div class="card streaming-links">
-                <h3>The Marvels</h3>
-                <p>Available on: <a href="#">Disney+</a></p>
-            </div>
-            <div class="card streaming-links">
-                <h3>Gen V</h3>
-                <p>Available on: <a href="#">Amazon Prime Video</a></p>
-            </div>
-        </section>
-        <section>
-            <h2>If You Liked This, Try...</h2>
-            <div class="card">
-                <h3>If you liked *The Marvels*, try:</h3>
-                <ul>
-                    <li><strong>Guardians of the Galaxy</strong> - Disney+</li>
-                    <li><strong>Avengers: Endgame</strong> - Disney+</li>
-                </ul>
-            </div>
-            <div class="card">
-                <h3>If you liked *Gen V*, try:</h3>
-                <ul>
-                    <li><strong>The Boys</strong> - Amazon Prime Video</li>
-                    <li><strong>Invincible</strong> - Amazon Prime Video</li>
-                </ul>
-            </div>
-        </section>
-    </main>
-    <footer>
-        <p>&copy; 2024 Show & Movie Reviews. All rights reserved.</p>
-    </footer>
+
+  <header>
+    <h1>Movie & TV Show Tracker</h1>
+    <p>Find shows and see where to stream them!</p>
+  </header>
+
+  <div id="show-list"></div>
+
+  <script>
+    const apiKey = '3f2fe61ae14a656e1ad11ff26b0d0594'; // Your TMDb API Key
+
+    // Fetch shows from TMDb
+    fetch(`https://api.themoviedb.org/3/discover/tv?api_key=${apiKey}&language=en-US`)
+      .then(response => response.json())
+      .then(data => {
+        const shows = data.results; // Array of TV shows from the API
+        const showList = document.getElementById('show-list');
+        
+        shows.forEach(show => {
+          const showSection = document.createElement('section');
+          showSection.classList.add('show');
+          
+          // Display show details
+          showSection.innerHTML = `
+            <img src="https://image.tmdb.org/t/p/w500/${show.poster_path}" alt="${show.name} Poster">
+            <h3>${show.name}</h3>
+            <p>${show.overview.slice(0, 100)}...</p>
+            <p><strong>Recommendation:</strong> Check it out!</p>
+          `;
+          
+          showList.appendChild(showSection);
+        });
+      })
+      .catch(error => console.log('Error fetching data: ', error));
+  </script>
+
 </body>
 </html>
