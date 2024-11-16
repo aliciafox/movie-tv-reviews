@@ -55,35 +55,47 @@
 
   <script>
     const API_KEY = '3f2fe61ae14a656e1ad11ff26b0d0594';  // Your TMDb API key
-    const API_URL = `https://api.themoviedb.org/3/discover/movie?api_key=${API_KEY}&sort_by=popularity.desc&page=1&language=en&region=CA`;
+    const BASE_API_URL = `https://api.themoviedb.org/3/discover/movie?api_key=${API_KEY}&sort_by=popularity.desc&page=`;
 
-    // Fetch popular content from TMDb API
-    fetch(API_URL)
-      .then(response => response.json())
-      .then(data => {
-        const shows = data.results;  // Extract list of movies/shows
-        const showList = document.getElementById('show-list'); // The container for the shows
+    const NUM_PAGES = 3;  // Set how many pages you want to fetch
 
-        // Clear the loading text
-        showList.innerHTML = '';
+    let allShows = []; // Array to store all the shows
 
-        // Loop through the results and display them
-        shows.forEach(show => {
-          const showSection = document.createElement('section');
-          showSection.classList.add('show');
-          showSection.innerHTML = `
-            <img src="https://image.tmdb.org/t/p/w500${show.poster_path}" alt="${show.title}">
-            <h3>${show.title}</h3>
-            <p>${show.overview}</p>
-          `;
-          showList.appendChild(showSection);
+    // Fetch shows from multiple pages
+    for (let i = 1; i <= NUM_PAGES; i++) {
+      fetch(`${BASE_API_URL}${i}&language=en&region=CA`)
+        .then(response => response.json())
+        .then(data => {
+          const shows = data.results;  // Get the shows from this page
+          allShows = [...allShows, ...shows];  // Append the results to the allShows array
+
+          // Display the shows once all pages are fetched
+          if (i === NUM_PAGES) {
+            displayShows(allShows);
+          }
+        })
+        .catch(error => {
+          console.error('Error fetching data:', error);
         });
-      })
-      .catch(error => {
-        const showList = document.getElementById('show-list');
-        showList.innerHTML = `Error: ${error.message}`; // Show error message
-        console.log('Error:', error);  // Log the error for debugging
+    }
+
+    // Function to display the shows
+    function displayShows(shows) {
+      const showList = document.getElementById('show-list');
+      showList.innerHTML = '';  // Clear the "Loading..." text
+
+      // Loop through all the shows and display them
+      shows.forEach(show => {
+        const showSection = document.createElement('section');
+        showSection.classList.add('show');
+        showSection.innerHTML = `
+          <img src="https://image.tmdb.org/t/p/w500${show.poster_path}" alt="${show.title}">
+          <h3>${show.title}</h3>
+          <p>${show.overview}</p>
+        `;
+        showList.appendChild(showSection);
       });
+    }
   </script>
 </body>
 </html>
