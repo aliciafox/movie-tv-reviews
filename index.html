@@ -5,54 +5,69 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Movie Search</title>
     <style>
+        /* General styling */
         body {
             font-family: 'Arial', sans-serif;
             margin: 0;
             padding: 0;
-            background-color: #2c3e50; /* Stylish dark blue */
-            color: #ecf0f1; /* Light text color for contrast */
+            background-color: #2c3e50; /* Dark blue background */
+            color: #ecf0f1; /* Light text for readability */
         }
+
+        /* Header styling */
         header {
             text-align: center;
             padding: 20px;
-            background-color: #34495e; /* A deeper shade for the header */
-            font-size: 2rem;
+            background-color: #34495e; /* Deep blue-gray for header */
+            font-size: 2.5rem;
             font-weight: bold;
-            color: #f39c12; /* Bright orange for the title */
+            color: #f39c12; /* Bright orange for the header text */
         }
+
+        /* Main content area */
         main {
             max-width: 1200px;
             margin: auto;
             padding: 20px;
+            text-align: center;
         }
+
+        /* Input and button styling */
         input, select, button {
             padding: 10px;
-            margin: 10px 0;
-            width: 100%;
+            margin: 10px;
+            width: calc(100% - 20px); /* Dynamic width for smaller devices */
             max-width: 400px;
             font-size: 1.1rem;
             border: none;
             border-radius: 5px;
             box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
         }
+
         button {
-            background-color: #f39c12; /* Bright orange for buttons */
+            background-color: #f39c12; /* Vibrant orange for the button */
             color: white;
             cursor: pointer;
             transition: background-color 0.3s ease;
         }
+
         button:hover {
-            background-color: #e67e22;
+            background-color: #e67e22; /* Darker orange on hover */
         }
+
+        /* Results container styling */
         #results {
             display: flex;
             flex-wrap: wrap;
             justify-content: space-around;
             list-style-type: none;
             padding: 0;
+            margin-top: 20px;
         }
+
+        /* Individual result item styling */
         .result-item {
-            background-color: #34495e;
+            background-color: #34495e; /* Darker background for cards */
             margin: 15px;
             padding: 15px;
             border-radius: 8px;
@@ -61,24 +76,31 @@
             max-width: 220px;
             text-align: center;
         }
+
         .result-item img {
             width: 100%;
             height: auto;
             border-radius: 5px;
         }
+
         .result-item h3 {
             margin: 10px 0;
             font-size: 1.2rem;
         }
+
         .result-item p {
             font-size: 0.9rem;
             margin: 5px 0;
         }
+
+        /* Pagination container styling */
         #pagination {
             display: flex;
             justify-content: center;
             margin: 20px 0;
         }
+
+        /* Pagination button styling */
         .page-btn {
             padding: 10px 15px;
             margin: 0 5px;
@@ -89,9 +111,11 @@
             color: white;
             cursor: pointer;
         }
+
         .page-btn:hover {
             background-color: #e67e22;
         }
+
         .page-btn.active {
             font-weight: bold;
             border: 2px solid #e67e22;
@@ -214,3 +238,4 @@
     </script>
 </body>
 </html>
+
