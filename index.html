@@ -134,12 +134,8 @@
 
         // Get genre names by mapping genre_ids to genre names
         function getGenres(genreIds) {
-            // Log the genreIds to debug if they are being passed correctly
-            console.log('Genre IDs:', genreIds);
             return genreIds.map(id => {
                 const genre = allGenres.find(genre => genre.id === id);
-                // Log each genre to see if it matches
-                console.log('Found genre for ID ' + id + ':', genre);
                 return genre ? genre.name : 'Unknown';
             });
         }
@@ -211,3 +207,4 @@
     </script>
 </body>
 </html>
+
