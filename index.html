@@ -1,59 +1,33 @@
-import time
-import requests
-from flask import Flask, request, render_template
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Search Movies</title>
+</head>
+<body>
 
-app = Flask(__name__)
+<h1>Search for Movies or Shows</h1>
 
-def fetch_items(api_url, search_params, total_items=200, items_per_page=50):
-    all_items = []
-    total_pages = total_items // items_per_page
-    if total_items % items_per_page != 0:
-        total_pages += 1
-
-    # Loop through pages to fetch results
-    for page in range(1, total_pages + 1):
-        params = {**search_params, 'page': page, 'per_page': items_per_page}
-        
-        response = requests.get(api_url, params=params)
-        
-        if response.status_code == 200:
-            data = response.json()
-            all_items.extend(data['results'])
-            print(f"Fetched {len(data['results'])} items from page {page}")
-        else:
-            print(f"Error fetching data from page {page}, Status Code: {response.status_code}")
-            break
-        
-        # If we hit the rate limit, pause for 10 seconds
-        if page % 40 == 0:
-            print("Rate limit reached. Waiting for 10 seconds...")
-            time.sleep(10)
+<form action="/search" method="get">
+    <label for="query">Movie/Show Title:</label>
+    <input type="text" id="query" name="query">
+    <br><br>
     
-    print(f"Total items fetched: {len(all_items)}")
-    return all_items
-
-@app.route('/search', methods=['GET'])
-def search_movies():
-    query = request.args.get('query', '')
-    genre = request.args.get('genre', '')
-    year = request.args.get('year', '')
-    ratings = request.args.get('ratings', '')
-
-    # Construct search parameters
-    search_params = {
-        'query': query,
-        'genre': genre,
-        'year': year,
-        'ratings': ratings
-    }
-
-    # TMDb API URL - Make sure to replace with your own API key
-    api_url = "https://api.themoviedb.org/3/search/movie?api_key=YOUR_API_KEY"
+    <label for="genre">Genre:</label>
+    <input type="text" id="genre" name="genre">
+    <br><br>
     
-    # Fetch data from the API
-    items = fetch_items(api_url, search_params)
+    <label for="year">Year Released:</label>
+    <input type="number" id="year" name="year">
+    <br><br>
     
-    return render_template('results.html', items=items)
+    <label for="ratings">Minimum Rotten Tomatoes Rating:</label>
+    <input type="number" id="ratings" name="ratings" min="0" max="100">
+    <br><br>
+    
+    <button type="submit">Search</button>
+</form>
 
-if __name__ == '__main__':
-    app.run(debug=True)
+</body>
+</html>
