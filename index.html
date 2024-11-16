@@ -1,226 +1,146 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Movie & Show Search with Genres and Similar Movies</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            margin: 20px;
-        }
-        .page-btn-container {
-            display: inline-block;
-            margin: 10px 0;
-        }
-        .page-btn {
-            padding: 5px 10px;
-            margin: 0 5px;
-            cursor: pointer;
-            background-color: #ddd;
-            border: none;
-            font-size: 14px;
-            border-radius: 4px;
-        }
-        .page-btn:hover {
-            background-color: #bbb;
-        }
-        .page-btn.active {
-            font-weight: bold;
-            background-color: #0056b3;
-            color: white;
-        }
-        .similar-movies {
-            margin-top: 20px;
-        }
-        .similar-movies h3 {
-            font-size: 1.2em;
-            margin-bottom: 10px;
-        }
-        .similar-movie-item {
-            display: inline-block;
-            width: 200px;
-            margin-right: 10px;
-            text-align: center;
-        }
-        .similar-movie-item img {
-            width: 100%;
-            height: 150px;
-            object-fit: cover;
-        }
-    </style>
-</head>
-<body>
-    <h1>Search for Movies or Shows</h1>
+<script>
+    const apiKey = '3f2fe61ae14a656e1ad11ff26b0d0594'; 
+    const apiUrl = 'https://api.themoviedb.org/3/';
+    const genresEndpoint = 'genre/movie/list?api_key=' + apiKey + '&language=en-US';
+    
+    let currentPage = 1;
+    let totalPages = 1;
+    let allGenres = [];
 
-    <input type="text" id="searchInput" placeholder="Search by title..." onkeyup="fetchResults()">
-    <select id="genreSelect" onchange="fetchResults()">
-        <option value="">Select Genre</option>
-        <!-- Genres will be populated by TMDb API -->
-    </select>
-    <input type="number" id="yearInput" placeholder="Year (e.g. 2020)" onkeyup="fetchResults()">
-    <input type="number" id="ratingInput" placeholder="Rating (e.g. 7.5)" step="0.1" onkeyup="fetchResults()">
-
-    <h2>Top 100 Movies & Shows</h2>
-    <ul id="results"></ul>
-
-    <div id="pagination" class="page-btn-container"></div>
-
-    <div class="similar-movies" id="similarMovies"></div>
-
-    <script>
-        const apiKey = '3f2fe61ae14a656e1ad11ff26b0d0594'; 
-        const apiUrl = 'https://api.themoviedb.org/3/';
-        const genresEndpoint = 'genre/movie/list?api_key=' + apiKey + '&language=en-US';
+    async function fetchGenres() {
+        const response = await fetch(apiUrl + genresEndpoint);
+        const data = await response.json();
+        allGenres = data.genres;
         
-        let currentPage = 1;
-        let totalPages = 1;
-        let allGenres = [];
+        const genreSelect = document.getElementById('genreSelect');
+        data.genres.forEach(genre => {
+            const option = document.createElement('option');
+            option.value = genre.id;
+            option.textContent = genre.name;
+            genreSelect.appendChild(option);
+        });
+    }
 
-        async function fetchGenres() {
-            const response = await fetch(apiUrl + genresEndpoint);
-            const data = await response.json();
-            allGenres = data.genres;
+    async function fetchResults(page = 1) {
+        currentPage = page;
+        const searchQuery = document.getElementById('searchInput').value;
+        const genre = document.getElementById('genreSelect').value;
+        const year = document.getElementById('yearInput').value;
+        const rating = document.getElementById('ratingInput').value;
+
+        let url = apiUrl + 'search/movie?api_key=' + apiKey + '&query=' + searchQuery + '&language=en-US&page=' + currentPage + '&include_adult=false';
+
+        if (genre) url += '&with_genres=' + genre;
+        if (year) url += '&year=' + year;
+        if (rating) url += '&vote_average.gte=' + rating;
+
+        const response = await fetch(url);
+        const data = await response.json();
+
+        totalPages = data.total_pages;
+        displayResults(data.results);
+        displayPagination();
+    }
+
+    function displayResults(results) {
+        const resultsContainer = document.getElementById('results');
+        resultsContainer.innerHTML = '';
+
+        if (results.length === 0) {
+            resultsContainer.innerHTML = '<li>No results found</li>';
+            return;
+        }
+
+        results.forEach(item => {
+            const listItem = document.createElement('li');
+            listItem.classList.add('result-item');
             
-            const genreSelect = document.getElementById('genreSelect');
-            data.genres.forEach(genre => {
-                const option = document.createElement('option');
-                option.value = genre.id;
-                option.textContent = genre.name;
-                genreSelect.appendChild(option);
-            });
+            const imageUrl = item.poster_path ? 'https://image.tmdb.org/t/p/w200' + item.poster_path : 'https://via.placeholder.com/100x150';
+            const genres = getGenres(item.genre_ids);
+            listItem.innerHTML = ` 
+                <img src="${imageUrl}" alt="${item.title}">
+                <div>
+                    <h3>${item.title}</h3>
+                    <p><strong>Genres:</strong> ${genres.join(', ') || 'N/A'}</p>
+                    <p><strong>Release Date:</strong> ${item.release_date || 'N/A'}</p>
+                    <p><strong>Rating:</strong> ${item.vote_average || 'N/A'}</p>
+                    <p><strong>Overview:</strong> ${item.overview || 'No description available.'}</p>
+                    <button onclick="fetchSimilarMovies(${item.id})">See Similar Movies</button>
+                </div>
+            `;
+            resultsContainer.appendChild(listItem);
+        });
+    }
+
+    function getGenres(genreIds) {
+        return genreIds.map(id => {
+            const genre = allGenres.find(genre => genre.id === id);
+            return genre ? genre.name : 'Unknown';
+        });
+    }
+
+    async function fetchSimilarMovies(movieId) {
+        const response = await fetch(apiUrl + 'movie/' + movieId + '/similar?api_key=' + apiKey + '&language=en-US&page=1');
+        const data = await response.json();
+        displaySimilarMovies(data.results);
+    }
+
+    function displaySimilarMovies(similarMovies) {
+        const similarMoviesContainer = document.getElementById('similarMovies');
+        similarMoviesContainer.innerHTML = '<h3>Similar Movies You Might Like:</h3>';
+
+        if (similarMovies.length === 0) {
+            similarMoviesContainer.innerHTML = '<p>No similar movies found.</p>';
+            return;
         }
 
-        async function fetchTop100() {
-            const response = await fetch(apiUrl + 'movie/top_rated?api_key=' + apiKey + '&language=en-US&page=1');
-            const data = await response.json();
-            displayResults(data.results);
-            totalPages = data.total_pages;
-            displayPagination();
-        }
+        similarMovies.forEach(movie => {
+            const movieItem = document.createElement('div');
+            movieItem.classList.add('similar-movie-item');
+            const imageUrl = movie.poster_path ? 'https://image.tmdb.org/t/p/w200' + movie.poster_path : 'https://via.placeholder.com/200x300';
+            
+            movieItem.innerHTML = `
+                <img src="${imageUrl}" alt="${movie.title}">
+                <p>${movie.title}</p>
+            `;
+            similarMoviesContainer.appendChild(movieItem);
+        });
+    }
 
-        async function fetchResults(page = 1) {
-            currentPage = page;
-            const searchQuery = document.getElementById('searchInput').value;
-            const genre = document.getElementById('genreSelect').value;
-            const year = document.getElementById('yearInput').value;
-            const rating = document.getElementById('ratingInput').value;
+    function displayPagination() {
+        const paginationContainer = document.getElementById('pagination');
+        paginationContainer.innerHTML = '';
 
-            let url = apiUrl + 'search/movie?api_key=' + apiKey + '&query=' + searchQuery + '&language=en-US&page=' + currentPage + '&include_adult=false';
+        const prevButton = document.createElement('button');
+        prevButton.classList.add('page-btn');
+        prevButton.textContent = 'Previous';
+        prevButton.disabled = currentPage === 1;
+        prevButton.onclick = () => fetchResults(currentPage - 1);
+        paginationContainer.appendChild(prevButton);
 
-            if (genre) url += '&with_genres=' + genre;
-            if (year) url += '&year=' + year;
-            if (rating) url += '&vote_average.gte=' + rating;
+        const startPage = Math.max(1, currentPage - 2);
+        const endPage = Math.min(totalPages, currentPage + 2);
 
-            const response = await fetch(url);
-            const data = await response.json();
-
-            totalPages = data.total_pages;
-            displayResults(data.results);
-            displayPagination();
-        }
-
-        function displayResults(results) {
-            const resultsContainer = document.getElementById('results');
-            resultsContainer.innerHTML = '';
-
-            if (results.length === 0) {
-                resultsContainer.innerHTML = '<li>No results found</li>';
-                return;
+        for (let i = startPage; i <= endPage; i++) {
+            const pageButton = document.createElement('button');
+            pageButton.classList.add('page-btn');
+            pageButton.textContent = i;
+            pageButton.onclick = () => fetchResults(i);
+            if (i === currentPage) {
+                pageButton.classList.add('active');
             }
-
-            results.forEach(item => {
-                const listItem = document.createElement('li');
-                listItem.classList.add('result-item');
-                
-                const imageUrl = item.poster_path ? 'https://image.tmdb.org/t/p/w200' + item.poster_path : 'https://via.placeholder.com/100x150';
-                const genres = getGenres(item.genre_ids);
-                listItem.innerHTML = ` 
-                    <img src="${imageUrl}" alt="${item.title}">
-                    <div>
-                        <h3>${item.title}</h3>
-                        <p><strong>Genres:</strong> ${genres.join(', ') || 'N/A'}</p>
-                        <p><strong>Release Date:</strong> ${item.release_date || 'N/A'}</p>
-                        <p><strong>Rating:</strong> ${item.vote_average || 'N/A'}</p>
-                        <p><strong>Overview:</strong> ${item.overview || 'No description available.'}</p>
-                        <button onclick="fetchSimilarMovies(${item.id})">See Similar Movies</button>
-                    </div>
-                `;
-                resultsContainer.appendChild(listItem);
-            });
+            paginationContainer.appendChild(pageButton);
         }
 
-        function getGenres(genreIds) {
-            return genreIds.map(id => {
-                const genre = allGenres.find(genre => genre.id === id);
-                return genre ? genre.name : 'Unknown';
-            });
-        }
+        const nextButton = document.createElement('button');
+        nextButton.classList.add('page-btn');
+        nextButton.textContent = 'Next';
+        nextButton.disabled = currentPage === totalPages;
+        nextButton.onclick = () => fetchResults(currentPage + 1);
+        paginationContainer.appendChild(nextButton);
+    }
 
-        async function fetchSimilarMovies(movieId) {
-            const response = await fetch(apiUrl + 'movie/' + movieId + '/similar?api_key=' + apiKey + '&language=en-US&page=1');
-            const data = await response.json();
-            displaySimilarMovies(data.results);
-        }
-
-        function displaySimilarMovies(similarMovies) {
-            const similarMoviesContainer = document.getElementById('similarMovies');
-            similarMoviesContainer.innerHTML = '<h3>Similar Movies You Might Like:</h3>';
-
-            if (similarMovies.length === 0) {
-                similarMoviesContainer.innerHTML = '<p>No similar movies found.</p>';
-                return;
-            }
-
-            similarMovies.forEach(movie => {
-                const movieItem = document.createElement('div');
-                movieItem.classList.add('similar-movie-item');
-                const imageUrl = movie.poster_path ? 'https://image.tmdb.org/t/p/w200' + movie.poster_path : 'https://via.placeholder.com/200x300';
-                
-                movieItem.innerHTML = `
-                    <img src="${imageUrl}" alt="${movie.title}">
-                    <p>${movie.title}</p>
-                `;
-                similarMoviesContainer.appendChild(movieItem);
-            });
-        }
-
-        function displayPagination() {
-            const paginationContainer = document.getElementById('pagination');
-            paginationContainer.innerHTML = '';
-
-            const prevButton = document.createElement('button');
-            prevButton.classList.add('page-btn');
-            prevButton.textContent = 'Previous';
-            prevButton.disabled = currentPage === 1;
-            prevButton.onclick = () => fetchResults(currentPage - 1);
-            paginationContainer.appendChild(prevButton);
-
-            const startPage = Math.max(1, currentPage - 2);
-            const endPage = Math.min(totalPages, currentPage + 2);
-
-            for (let i = startPage; i <= endPage; i++) {
-                const pageButton = document.createElement('button');
-                pageButton.classList.add('page-btn');
-                pageButton.textContent = i;
-                pageButton.onclick = () => fetchResults(i);
-                if (i === currentPage) {
-                    pageButton.classList.add('active');
-                }
-                paginationContainer.appendChild(pageButton);
-            }
-
-            const nextButton = document.createElement('button');
-            nextButton.classList.add('page-btn');
-            nextButton.textContent = 'Next';
-            nextButton.disabled = currentPage === totalPages;
-            nextButton.onclick = () => fetchResults(currentPage + 1);
-            paginationContainer.appendChild(nextButton);
-        }
-
-        // Initialize page and genres
-        fetchGenres();
-        fetchTop100();
-    </script>
-</body>
-</html>
+    // Initialize page and genres
+    fetchGenres();
+    fetchResults();  // This will load the first page on load
+</script>
