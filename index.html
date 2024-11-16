@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Movie & Show Search</title>
+    <title>Movie & Show Search with Pagination</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -36,6 +36,15 @@
         .result-item p {
             margin: 5px 0;
         }
+        #pagination {
+            text-align: center;
+            margin-top: 20px;
+        }
+        .page-btn {
+            padding: 5px 10px;
+            margin: 0 5px;
+            cursor: pointer;
+        }
     </style>
 </head>
 <body>
@@ -49,12 +58,18 @@
     <input type="number" id="yearInput" placeholder="Year (e.g. 2020)" onkeyup="fetchResults()">
     <input type="number" id="ratingInput" placeholder="Rating (e.g. 7.5)" step="0.1" onkeyup="fetchResults()">
 
+    <h2>Top 100 Movies & Shows</h2>
     <ul id="results"></ul>
+
+    <div id="pagination"></div>
 
     <script>
         const apiKey = 'YOUR_TMDB_API_KEY'; // Replace with your TMDb API Key
         const apiUrl = 'https://api.themoviedb.org/3/';
         const genresEndpoint = 'genre/movie/list?api_key=' + apiKey + '&language=en-US';
+        
+        let currentPage = 1; // Initial page
+        let totalPages = 1; // To keep track of total pages
         
         // Fetch genres from TMDb API to populate the genre dropdown
         async function fetchGenres() {
@@ -70,14 +85,25 @@
             });
         }
 
+        // Fetch top-rated movies and shows (Top 100) from TMDb API
+        async function fetchTop100() {
+            const response = await fetch(apiUrl + 'movie/top_rated?api_key=' + apiKey + '&language=en-US&page=1');
+            const data = await response.json();
+            
+            displayResults(data.results);
+            totalPages = data.total_pages; // Update totalPages if needed for pagination
+            displayPagination();
+        }
+
         // Function to fetch movie/show results based on user input
-        async function fetchResults() {
+        async function fetchResults(page = 1) {
+            currentPage = page;
             const searchQuery = document.getElementById('searchInput').value;
             const genre = document.getElementById('genreSelect').value;
             const year = document.getElementById('yearInput').value;
             const rating = document.getElementById('ratingInput').value;
 
-            let url = apiUrl + 'search/movie?api_key=' + apiKey + '&query=' + searchQuery + '&language=en-US&page=1&include_adult=false';
+            let url = apiUrl + 'search/movie?api_key=' + apiKey + '&query=' + searchQuery + '&language=en-US&page=' + currentPage + '&include_adult=false';
 
             if (genre) url += '&with_genres=' + genre;
             if (year) url += '&year=' + year;
@@ -86,7 +112,9 @@
             const response = await fetch(url);
             const data = await response.json();
 
+            totalPages = data.total_pages; // Get the total number of pages
             displayResults(data.results);
+            displayPagination();
         }
 
         // Function to display search results on the page
@@ -117,7 +145,44 @@
             });
         }
 
-        // Initialize the page by fetching genres when it loads
+        // Function to display pagination buttons
+        function displayPagination() {
+            const paginationContainer = document.getElementById('pagination');
+            paginationContainer.innerHTML = '';
+
+            // Create "Previous" button
+            if (currentPage > 1) {
+                const prevButton = document.createElement('button');
+                prevButton.classList.add('page-btn');
+                prevButton.textContent = 'Previous';
+                prevButton.onclick = () => fetchResults(currentPage - 1);
+                paginationContainer.appendChild(prevButton);
+            }
+
+            // Create page number buttons
+            for (let i = 1; i <= totalPages; i++) {
+                const pageButton = document.createElement('button');
+                pageButton.classList.add('page-btn');
+                pageButton.textContent = i;
+                pageButton.onclick = () => fetchResults(i);
+                if (i === currentPage) {
+                    pageButton.style.fontWeight = 'bold';
+                }
+                paginationContainer.appendChild(pageButton);
+            }
+
+            // Create "Next" button
+            if (currentPage < totalPages) {
+                const nextButton = document.createElement('button');
+                nextButton.classList.add('page-btn');
+                nextButton.textContent = 'Next';
+                nextButton.onclick = () => fetchResults(currentPage + 1);
+                paginationContainer.appendChild(nextButton);
+            }
+        }
+
+        // Initialize the page by fetching top-rated movies and genres when it loads
+        fetchTop100(); // Fetch top 100 movies/shows by default
         fetchGenres();
     </script>
 </body>
