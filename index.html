@@ -5,110 +5,70 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Movie Search</title>
     <style>
-        body {
-            font-family: 'Arial', sans-serif;
-            margin: 0;
-            padding: 0;
+        /* Add styles for the modal */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            overflow: auto;
+            padding-top: 60px;
+        }
+
+        .modal-content {
             background-color: #2c3e50;
             color: #ecf0f1;
+            margin: 5% auto;
+            padding: 20px;
+            border-radius: 10px;
+            width: 80%;
+            max-width: 600px;
         }
 
-        header {
-            text-align: center;
-            padding: 20px;
-            background-color: #34495e;
-            font-size: 2.5rem;
+        .close {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
             font-weight: bold;
+        }
+
+        .close:hover,
+        .close:focus {
             color: #f39c12;
-        }
-
-        main {
-            max-width: 1200px;
-            margin: auto;
-            padding: 20px;
-            text-align: center;
-        }
-
-        input, select, button {
-            padding: 10px;
-            margin: 10px;
-            width: 100%;
-            max-width: 400px;
-            font-size: 1.1rem;
-            border: none;
-            border-radius: 5px;
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
-        }
-
-        button {
-            background-color: #f39c12;
-            color: white;
+            text-decoration: none;
             cursor: pointer;
         }
 
-        button:hover {
-            background-color: #e67e22;
-        }
-
-        #results {
-            display: flex;
-            flex-wrap: wrap;
-            justify-content: space-around;
-            list-style-type: none;
-            padding: 0;
+        /* Styling for the movie details section */
+        #movieDetails {
             margin-top: 20px;
         }
 
-        .result-item {
-            background-color: #34495e;
-            margin: 15px;
-            padding: 15px;
-            border-radius: 8px;
-            flex: 1 1 200px;
-            max-width: 220px;
-            text-align: center;
+        #movieDetails h2 {
+            margin-bottom: 10px;
         }
 
-        .result-item img {
-            width: 100%;
-            height: auto;
-            border-radius: 5px;
-        }
-
-        .result-item h3 {
-            margin: 10px 0;
-            font-size: 1.2rem;
-        }
-
-        .result-item p {
-            font-size: 0.9rem;
-            margin: 5px 0;
-        }
-
-        #pagination {
-            display: flex;
-            justify-content: center;
-            margin: 20px 0;
-        }
-
-        .next-prev-btn {
-            padding: 10px 15px;
-            margin: 0 5px;
+        #movieDetails p {
             font-size: 1rem;
-            border: none;
-            border-radius: 5px;
-            background-color: #f39c12;
-            color: white;
-            cursor: pointer;
+            line-height: 1.5;
         }
 
-        .next-prev-btn:hover {
-            background-color: #e67e22;
+        #streaming {
+            margin-top: 10px;
         }
 
-        .next-prev-btn:disabled {
-            background-color: #7f8c8d;
-            cursor: not-allowed;
+        #streaming a {
+            color: #f39c12;
+            text-decoration: none;
+            margin-right: 15px;
+        }
+
+        #streaming a:hover {
+            text-decoration: underline;
         }
     </style>
 </head>
@@ -127,6 +87,21 @@
         <ul id="results"></ul>
         <div id="pagination"></div>
     </main>
+
+    <!-- Modal for displaying movie details -->
+    <div id="movieModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal()">&times;</span>
+            <div id="movieDetails">
+                <h2 id="movieTitle"></h2>
+                <p id="movieTagline"></p>
+                <div id="streaming">
+                    <p><strong>Available on:</strong></p>
+                    <!-- Streaming services will be listed here -->
+                </div>
+            </div>
+        </div>
+    </div>
 
     <script>
         const API_KEY = '3f2fe61ae14a656e1ad11ff26b0d0594';
@@ -156,10 +131,10 @@
             }
         }
 
-        // Fetch and populate years (most current year first)
+        // Fetch and populate years
         function populateYearSelect() {
             const yearSelect = document.getElementById('yearSelect');
-            for (let year = currentYear; year >= 1920; year--) {
+            for (let year = 1920; year <= currentYear; year++) {
                 const option = document.createElement('option');
                 option.value = year;
                 option.textContent = year;
@@ -214,48 +189,84 @@
                 const releaseDate = `<p>Year: ${new Date(movie.release_date).getFullYear()}</p>`;
                 const rating = `<p>Rating: ${Math.round(movie.vote_average)}</p>`;
 
+                // Add click event to show movie details
                 item.innerHTML = `${poster}${title}${releaseDate}${rating}`;
+                item.onclick = () => showMovieDetails(movie.id);
                 results.appendChild(item);
             });
         }
 
-        // Display pagination with only Next/Previous buttons
+        // Show movie details in modal
+        async function showMovieDetails(movieId) {
+            const modal = document.getElementById('movieModal');
+            const movieTitle = document.getElementById('movieTitle');
+            const movieTagline = document.getElementById('movieTagline');
+            const streaming = document.getElementById('streaming');
+            streaming.innerHTML = '<p><strong>Available on:</strong></p>'; // Clear previous data
+
+            try {
+                // Fetch movie details
+                const movieResponse = await fetch(`${API_URL}/movie/${movieId}?api_key=${API_KEY}&language=en-US`);
+                const movieData = await movieResponse.json();
+
+                // Display tagline
+                movieTitle.textContent = movieData.title;
+                movieTagline.textContent = movieData.tagline || 'No tagline available';
+
+                // Fetch streaming platforms
+                const providersResponse = await fetch(`${API_URL}/movie/${movieId}/watch/providers?api_key=${API_KEY}`);
+                const providersData = await providersResponse.json();
+
+                if (providersData.results && providersData.results.US) {
+                    const platforms = providersData.results.US.flatrate || [];
+                    platforms.forEach(provider => {
+                        const providerLink = document.createElement('a');
+                        providerLink.href = `https://www.${provider.provider_name.toLowerCase()}.com`;
+                        providerLink.textContent = provider.provider_name;
+                        providerLink.target = '_blank';
+                        streaming.appendChild(providerLink);
+                    });
+                } else {
+                    streaming.innerHTML += '<p>Not available on streaming platforms.</p>';
+                }
+
+                modal.style.display = 'block'; // Show the modal
+            } catch (error) {
+                console.error('Error fetching movie details:', error);
+            }
+        }
+
+        // Close the modal
+        function closeModal() {
+            const modal = document.getElementById('movieModal');
+            modal.style.display = 'none';
+        }
+
+        // Display pagination
         function displayPagination() {
             const pagination = document.getElementById('pagination');
             pagination.innerHTML = '';
 
-            // Previous button
-            const prevButton = document.createElement('button');
-            prevButton.textContent = 'Previous';
-            prevButton.className = 'next-prev-btn';
-            prevButton.disabled = currentPage === 1;
-            prevButton.addEventListener('click', () => {
-                if (currentPage > 1) {
-                    fetchResults(currentPage - 1);
-                }
-            });
-            pagination.appendChild(prevButton);
+            // Display previous page button
+            if (currentPage > 1) {
+                const prevButton = document.createElement('button');
+                prevButton.textContent = 'Previous';
+                prevButton.onclick = () => fetchResults(currentPage - 1);
+                pagination.appendChild(prevButton);
+            }
 
-            // Next button
-            const nextButton = document.createElement('button');
-            nextButton.textContent = 'Next';
-            nextButton.className = 'next-prev-btn';
-            nextButton.disabled = currentPage === totalPages;
-            nextButton.addEventListener('click', () => {
-                if (currentPage < totalPages) {
-                    fetchResults(currentPage + 1);
-                }
-            });
-            pagination.appendChild(nextButton);
+            // Display next page button
+            if (currentPage < totalPages) {
+                const nextButton = document.createElement('button');
+                nextButton.textContent = 'Next';
+                nextButton.onclick = () => fetchResults(currentPage + 1);
+                pagination.appendChild(nextButton);
+            }
         }
 
-        // Fetch latest movies ranked by highest rating on page load
-        window.onload = () => {
-            fetchResults(1); // Automatically load the first page of highest-rated movies on page load
-            fetchGenres();  // Populate genre dropdown
-            populateYearSelect();  // Populate year dropdown
-        };
+        // Initial setup
+        fetchGenres();
+        populateYearSelect();
     </script>
 </body>
 </html>
-
