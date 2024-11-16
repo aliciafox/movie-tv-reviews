@@ -4,108 +4,213 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Movie Search</title>
-    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
     <style>
         body {
-            font-family: 'Roboto', sans-serif;
+            font-family: 'Arial', sans-serif;
             margin: 0;
             padding: 0;
-            background: linear-gradient(to bottom, #141e30, #243b55);
-            color: #ffffff;
+            background-color: #2c3e50; /* Stylish dark blue */
+            color: #ecf0f1; /* Light text color for contrast */
         }
-        h1 {
+        header {
             text-align: center;
-            font-size: 2.5em;
-            margin: 20px 0;
+            padding: 20px;
+            background-color: #34495e; /* A deeper shade for the header */
+            font-size: 2rem;
+            font-weight: bold;
+            color: #f39c12; /* Bright orange for the title */
         }
-        #search-container {
-            max-width: 800px;
-            margin: 20px auto;
-            text-align: center;
+        main {
+            max-width: 1200px;
+            margin: auto;
+            padding: 20px;
         }
         input, select, button {
             padding: 10px;
-            margin: 10px 5px;
+            margin: 10px 0;
             width: 100%;
-            max-width: 300px;
+            max-width: 400px;
+            font-size: 1.1rem;
             border: none;
             border-radius: 5px;
-        }
-        input, select {
-            background-color: #ffffff;
-            color: #000000;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
         }
         button {
-            background-color: #1e90ff;
-            color: #ffffff;
+            background-color: #f39c12; /* Bright orange for buttons */
+            color: white;
             cursor: pointer;
+            transition: background-color 0.3s ease;
         }
-        #movie-container {
-            max-width: 1200px;
-            margin: 20px auto;
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 15px;
-            padding: 10px;
+        button:hover {
+            background-color: #e67e22;
         }
-        .movie-card {
-            background-color: #1c2833;
+        #results {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-around;
+            list-style-type: none;
+            padding: 0;
+        }
+        .result-item {
+            background-color: #34495e;
+            margin: 15px;
+            padding: 15px;
             border-radius: 8px;
-            overflow: hidden;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+            flex: 1 1 200px;
+            max-width: 220px;
             text-align: center;
         }
-        .movie-card img {
+        .result-item img {
             width: 100%;
-            height: 300px;
-            object-fit: cover;
+            height: auto;
+            border-radius: 5px;
         }
-        .movie-card h3 {
-            font-size: 1.2em;
+        .result-item h3 {
             margin: 10px 0;
+            font-size: 1.2rem;
         }
-        .movie-card p {
+        .result-item p {
+            font-size: 0.9rem;
             margin: 5px 0;
-            font-size: 0.9em;
         }
         #pagination {
-            text-align: center;
+            display: flex;
+            justify-content: center;
             margin: 20px 0;
         }
         .page-btn {
-            margin: 5px;
             padding: 10px 15px;
+            margin: 0 5px;
+            font-size: 1rem;
             border: none;
             border-radius: 5px;
-            background-color: #1e90ff;
-            color: #ffffff;
+            background-color: #f39c12;
+            color: white;
             cursor: pointer;
         }
         .page-btn:hover {
-            background-color: #00bfff;
+            background-color: #e67e22;
         }
-        .page-btn[disabled] {
-            background-color: #555;
-            cursor: not-allowed;
+        .page-btn.active {
+            font-weight: bold;
+            border: 2px solid #e67e22;
         }
     </style>
 </head>
 <body>
-    <h1>Movie Search</h1>
-    <div id="search-container">
-        <input type="text" id="searchInput" placeholder="Search by title..." onkeyup="fetchResults()">
-        <select id="genreSelect" onchange="fetchResults()">
-            <option value="">All Genres</option>
-            <!-- Genres populated by TMDb -->
+    <header>Movie Search</header>
+    <main>
+        <input type="text" id="searchInput" placeholder="Search by title...">
+        <select id="genreSelect">
+            <option value="">Select Genre</option>
         </select>
-        <input type="number" id="yearInput" placeholder="Year (e.g., 2020)" onkeyup="fetchResults()">
-        <input type="number" id="ratingInput" placeholder="Rating (1-10)" onkeyup="fetchResults()" step="1" max="10" min="1">
-    </div>
-    <div id="movie-container"></div>
-    <div id="pagination"></div>
+        <input type="number" id="yearInput" placeholder="Year (e.g. 2020)">
+        <input type="number" id="ratingInput" placeholder="Rating (1-10)" step="1">
+        <button onclick="fetchResults()">Search</button>
+        <ul id="results"></ul>
+        <div id="pagination"></div>
+    </main>
     <script>
-        /* The same functional JavaScript code previously provided */
+        const API_KEY = '3f2fe61ae14a656e1ad11ff26b0d0594';
+        const API_URL = 'https://api.themoviedb.org/3';
+        const IMAGE_URL = 'https://image.tmdb.org/t/p/w500';
+        const CURRENT_YEAR = new Date().getFullYear();
+
+        let currentPage = 1;
+        let totalPages = 1;
+
+        // Fetch and populate genres
+        async function fetchGenres() {
+            try {
+                const response = await fetch(`${API_URL}/genre/movie/list?api_key=${API_KEY}&language=en-US`);
+                const data = await response.json();
+                const genreSelect = document.getElementById('genreSelect');
+                data.genres.forEach(genre => {
+                    const option = document.createElement('option');
+                    option.value = genre.id;
+                    option.textContent = genre.name;
+                    genreSelect.appendChild(option);
+                });
+            } catch (error) {
+                console.error('Error fetching genres:', error);
+            }
+        }
+
+        // Fetch results based on filters and display them
+        async function fetchResults(page = 1) {
+            const searchInput = document.getElementById('searchInput').value;
+            const genreInput = document.getElementById('genreSelect').value;
+            const yearInput = document.getElementById('yearInput').value;
+            const ratingInput = document.getElementById('ratingInput').value;
+
+            let query = `${API_URL}/discover/movie?api_key=${API_KEY}&language=en-US&page=${page}&include_adult=false`;
+            if (searchInput) query += `&query=${searchInput}`;
+            if (genreInput) query += `&with_genres=${genreInput}`;
+            if (yearInput) query += `&primary_release_year=${yearInput}`;
+            if (ratingInput) query += `&vote_average.gte=${ratingInput}`;
+
+            try {
+                const response = await fetch(query);
+                const data = await response.json();
+
+                totalPages = data.total_pages;
+                displayResults(data.results);
+                displayPagination();
+            } catch (error) {
+                console.error('Error fetching results:', error);
+            }
+        }
+
+        // Display movie results
+        function displayResults(movies) {
+            const results = document.getElementById('results');
+            results.innerHTML = '';
+            movies.forEach(movie => {
+                if (new Date(movie.release_date).getFullYear() > CURRENT_YEAR) return;
+
+                const item = document.createElement('li');
+                item.className = 'result-item';
+
+                const poster = movie.poster_path ? `<img src="${IMAGE_URL + movie.poster_path}" alt="${movie.title}">` : '';
+                const title = `<h3>${movie.title}</h3>`;
+                const releaseDate = `<p>Year: ${new Date(movie.release_date).getFullYear()}</p>`;
+                const rating = `<p>Rating: ${Math.round(movie.vote_average)}</p>`;
+                const genres = `<p>Genres: ${movie.genre_ids.map(id => getGenreName(id)).join(', ')}</p>`;
+
+                item.innerHTML = `${poster}${title}${releaseDate}${rating}${genres}`;
+                results.appendChild(item);
+            });
+        }
+
+        // Display pagination
+        function displayPagination() {
+            const pagination = document.getElementById('pagination');
+            pagination.innerHTML = '';
+
+            for (let i = 1; i <= totalPages; i++) {
+                const button = document.createElement('button');
+                button.textContent = i;
+                button.className = 'page-btn';
+                if (i === currentPage) button.classList.add('active');
+                button.addEventListener('click', () => {
+                    currentPage = i;
+                    fetchResults(i);
+                });
+                pagination.appendChild(button);
+            }
+        }
+
+        // Get genre name by ID
+        function getGenreName(id) {
+            const genreSelect = document.getElementById('genreSelect');
+            const option = Array.from(genreSelect.options).find(opt => parseInt(opt.value) === id);
+            return option ? option.textContent : 'Unknown';
+        }
+
+        // Initialize page
+        fetchGenres();
+        fetchResults();
     </script>
 </body>
 </html>
-
