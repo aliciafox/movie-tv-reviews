@@ -134,6 +134,9 @@
         let currentPage = 1;
         let totalPages = 1;
 
+        // Get the current year
+        const currentYear = new Date().getFullYear();
+
         // Fetch and populate genres
         async function fetchGenres() {
             try {
@@ -159,6 +162,10 @@
             const ratingInput = document.getElementById('ratingInput').value;
 
             let query = `${API_URL}/discover/movie?api_key=${API_KEY}&language=en-US&page=${page}&include_adult=false&sort_by=release_date.desc`;
+
+            // Exclude future years by filtering movies to those released up until the current year
+            query += `&primary_release_year.lte=${currentYear}`;
+
             if (searchInput) query += `&query=${searchInput}`;
             if (genreInput) query += `&with_genres=${genreInput}`;
             if (yearInput) query += `&primary_release_year=${yearInput}`;
