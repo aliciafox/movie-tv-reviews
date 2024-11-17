@@ -67,6 +67,12 @@
             flex: 1 1 200px;
             max-width: 220px;
             text-align: center;
+            cursor: pointer;
+            transition: transform 0.2s ease;
+        }
+
+        .result-item:hover {
+            transform: scale(1.05);
         }
 
         .result-item img {
@@ -83,6 +89,43 @@
         .result-item p {
             font-size: 0.9rem;
             margin: 5px 0;
+        }
+
+        #details {
+            background-color: #34495e;
+            color: #ecf0f1;
+            padding: 20px;
+            margin: 20px auto;
+            max-width: 800px;
+            border-radius: 10px;
+            text-align: left;
+            display: none;
+        }
+
+        #details h2 {
+            margin-bottom: 10px;
+            font-size: 2rem;
+            color: #f39c12;
+        }
+
+        #details p {
+            margin: 5px 0;
+            font-size: 1rem;
+        }
+
+        #details ul {
+            list-style-type: none;
+            padding: 0;
+        }
+
+        #details ul li {
+            margin: 5px 0;
+        }
+
+        #details img {
+            width: 100%;
+            max-width: 300px;
+            border-radius: 10px;
         }
     </style>
 </head>
@@ -102,6 +145,7 @@
         </select>
         <button onclick="fetchResults()">Search</button>
         <ul id="results"></ul>
+        <div id="details"></div>
     </main>
 
     <script>
@@ -111,14 +155,13 @@
 
         const currentYear = new Date().getFullYear();
 
-        // Populate genres
         async function fetchGenres() {
-            const searchType = document.getElementById('searchType').value; // "movie" or "tv"
+            const searchType = document.getElementById('searchType').value;
             try {
                 const response = await fetch(`${API_URL}/genre/${searchType}/list?api_key=${API_KEY}&language=en-US`);
                 const data = await response.json();
                 const genreSelect = document.getElementById('genreSelect');
-                genreSelect.innerHTML = '<option value="">Select Genre</option>'; // Clear old genres
+                genreSelect.innerHTML = '<option value="">Select Genre</option>';
                 data.genres.forEach(genre => {
                     const option = document.createElement('option');
                     option.value = genre.id;
@@ -130,10 +173,9 @@
             }
         }
 
-        // Populate years
         function populateYearSelect() {
             const yearSelect = document.getElementById('yearSelect');
-            yearSelect.innerHTML = '<option value="">Select Year</option>'; // Clear old years
+            yearSelect.innerHTML = '<option value="">Select Year</option>';
             for (let year = currentYear; year >= 1920; year--) {
                 const option = document.createElement('option');
                 option.value = year;
@@ -142,7 +184,6 @@
             }
         }
 
-        // Fetch results
         async function fetchResults() {
             const searchType = document.getElementById('searchType').value;
             const searchInput = document.getElementById('searchInput').value;
@@ -164,7 +205,6 @@
             }
         }
 
-        // Display results
         function displayResults(items, searchType) {
             const results = document.getElementById('results');
             results.innerHTML = '';
@@ -172,6 +212,7 @@
             items.forEach(item => {
                 const resultItem = document.createElement('li');
                 resultItem.className = 'result-item';
+                resultItem.onclick = () => fetchDetails(item.id, searchType);
 
                 const poster = item.poster_path ? `<img src="${IMAGE_URL + item.poster_path}" alt="${item.title || item.name}">` : '';
                 const title = `<h3>${item.title || item.name}</h3>`;
@@ -182,17 +223,43 @@
             });
         }
 
-        // Populate genres and years on page load
-        window.onload = () => {
-            fetchGenres();
-            populateYearSelect();
+        async function fetchDetails(id, type) {
+            const detailsDiv = document.getElementById('details');
+            try {
+                const response = await fetch(`${API_URL}/${type}/${id}?api_key=${API_KEY}&language=en-US&append_to_response=credits,similar,watch/providers`);
+                const data = await response.json();
 
-            // Automatically load popular movies
-            fetchResults();
-        };
+                const cast = data.credits.cast.slice(0, 5).map(actor => actor.name).join(', ');
+                const tagline = data.tagline ? `<p><strong>Tagline:</strong> ${data.tagline}</p>` : '';
+                const genres = data.genres.map(genre => genre.name).join(', ');
+                const similarItems = data.similar.results.slice(0, 5).map(item => item.title || item.name).join(', ');
 
-        // Fetch genres dynamically when search type changes
+                const providers = data["watch/providers"]?.results?.US?.flatrate || [];
+                const streamingPlatforms = providers.length
+                    ? providers.map(provider => provider.provider_name).join(', ')
+                    : 'Not Available';
+
+                detailsDiv.innerHTML = `
+                    <h2>${data.title || data.name}</h2>
+                    <p><strong>Year:</strong> ${new Date(data.release_date || data.first_air_date).getFullYear()}</p>
+                    <p><strong>Rating:</strong> ${data.vote_average.toFixed(1)}</p>
+                    <p><strong>Genres:</strong> ${genres}</p>
+                    <p><strong>Cast:</strong> ${cast}</p>
+                    ${tagline}
+                    <p><strong>Similar Titles:</strong> ${similarItems}</p>
+                    <p><strong>Streaming On:</strong> ${streamingPlatforms}</p>
+                `;
+                detailsDiv.style.display = 'block';
+            } catch (error) {
+                console.error('Error fetching details:', error);
+            }
+        }
+
         document.getElementById('searchType').addEventListener('change', fetchGenres);
+
+        // Initialize genres and year selector
+        fetchGenres();
+        populateYearSelect();
     </script>
 </body>
 </html>
