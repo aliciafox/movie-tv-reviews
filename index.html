@@ -112,23 +112,29 @@
             cursor: not-allowed;
         }
 
-        #details {
-            margin-top: 20px;
+        #movieDetails {
+            display: none;
             background-color: #34495e;
             padding: 20px;
-            border-radius: 8px;
+            border-radius: 10px;
             text-align: left;
-            display: none;
+            margin-top: 20px;
         }
 
-        #details h2 {
+        #movieDetails h2 {
             font-size: 2rem;
-            color: #f39c12;
+            margin-bottom: 10px;
         }
 
-        #details p {
+        #movieDetails p {
             font-size: 1rem;
-            color: #ecf0f1;
+            margin-bottom: 5px;
+        }
+
+        #movieDetails img {
+            width: 300px;
+            height: auto;
+            margin-bottom: 20px;
         }
     </style>
 </head>
@@ -136,7 +142,7 @@
     <header>Movie & TV Show Search</header>
     <main>
         <input type="text" id="searchInput" placeholder="Search by title...">
-        <select id="mediaTypeSelect">
+        <select id="mediaSelect">
             <option value="movie">Movies</option>
             <option value="tv">TV Shows</option>
         </select>
@@ -151,16 +157,17 @@
         <ul id="results"></ul>
         <div id="pagination"></div>
 
-        <div id="details">
-            <h2>Details</h2>
-            <p id="details-title"></p>
-            <p id="details-year"></p>
-            <p id="details-rating"></p>
-            <p id="details-cast"></p>
-            <p id="details-tagline"></p>
-            <p id="details-genre"></p>
-            <p id="details-streaming"></p>
-            <p id="details-similar"></p>
+        <!-- Movie Details Section -->
+        <div id="movieDetails">
+            <h2 id="movieTitle"></h2>
+            <img id="moviePoster" src="" alt="Movie Poster">
+            <p><strong>Release Year:</strong> <span id="movieYear"></span></p>
+            <p><strong>Rating:</strong> <span id="movieRating"></span></p>
+            <p><strong>Tagline:</strong> <span id="movieTagline"></span></p>
+            <p><strong>Genres:</strong> <span id="movieGenres"></span></p>
+            <p><strong>Cast:</strong> <span id="movieCast"></span></p>
+            <p><strong>Streaming:</strong> <span id="movieStreaming"></span></p>
+            <p><strong>Similar Movies/TV Shows:</strong> <span id="movieSimilar"></span></p>
         </div>
     </main>
 
@@ -168,21 +175,17 @@
         const API_KEY = '3f2fe61ae14a656e1ad11ff26b0d0594';
         const API_URL = 'https://api.themoviedb.org/3';
         const IMAGE_URL = 'https://image.tmdb.org/t/p/w500';
+        const currentYear = new Date().getFullYear();
 
         let currentPage = 1;
         let totalPages = 1;
-        let mediaType = 'movie'; // Default is 'movie'
-
-        // Get the current year
-        const currentYear = new Date().getFullYear();
 
         // Fetch and populate genres
         async function fetchGenres() {
             try {
-                const response = await fetch(`${API_URL}/genre/${mediaType}/list?api_key=${API_KEY}&language=en-US`);
+                const response = await fetch(`${API_URL}/genre/movie/list?api_key=${API_KEY}&language=en-US`);
                 const data = await response.json();
                 const genreSelect = document.getElementById('genreSelect');
-                genreSelect.innerHTML = '<option value="">Select Genre</option>'; // Clear existing options
                 data.genres.forEach(genre => {
                     const option = document.createElement('option');
                     option.value = genre.id;
@@ -197,7 +200,6 @@
         // Fetch and populate years
         function populateYearSelect() {
             const yearSelect = document.getElementById('yearSelect');
-            yearSelect.innerHTML = '<option value="">Select Year</option>'; // Clear existing options
             for (let year = currentYear; year >= 1920; year--) {
                 const option = document.createElement('option');
                 option.value = year;
@@ -212,6 +214,7 @@
             const genreInput = document.getElementById('genreSelect').value;
             const yearInput = document.getElementById('yearSelect').value;
             const ratingInput = document.getElementById('ratingInput').value;
+            const mediaType = document.getElementById('mediaSelect').value;
 
             let query = `${API_URL}/discover/${mediaType}?api_key=${API_KEY}&language=en-US&page=${page}&include_adult=false&sort_by=release_date.desc`;
 
@@ -227,98 +230,148 @@
                 totalPages = data.total_pages;
                 currentPage = page;
 
-                displayResults(data.results);
+                // Filter out movies that are released in the future
+                const filteredResults = data.results.filter(item => {
+                    const releaseDate = new Date(item.release_date || item.first_air_date);
+                    return releaseDate <= new Date(); // Only show past or current releases
+                });
+
+                displayResults(filteredResults);
                 displayPagination();
             } catch (error) {
                 console.error('Error fetching results:', error);
             }
         }
 
-        // Display movie or TV show results
-        function displayResults(items) {
-            const results = document.getElementById('results');
-            results.innerHTML = '';
-            items.forEach(item => {
-                const itemElement = document.createElement('li');
-                itemElement.className = 'result-item';
-                itemElement.innerHTML = `
-                    <img src="${IMAGE_URL + (item.poster_path || '')}" alt="${item.title || item.name}">
-                    <h3>${item.title || item.name}</h3>
-                    <p>Year: ${new Date(item.release_date).getFullYear()}</p>
-                    <p>Rating: ${Math.round(item.vote_average)}</p>
-                `;
-                itemElement.onclick = () => displayDetails(item);
-                results.appendChild(itemElement);
+        // Display search results
+        function displayResults(results) {
+            const resultsList = document.getElementById('results');
+            resultsList.innerHTML = '';
+
+            results.forEach(item => {
+                const li = document.createElement('li');
+                li.className = 'result-item';
+                li.onclick = () => displayDetails(item);
+
+                const poster = item.poster_path ? `<img src="${IMAGE_URL + item.poster_path}" alt="${item.title || item.name}">` : '';
+                const title = `<h3>${item.title || item.name}</h3>`;
+                const releaseYear = `<p>Year: ${new Date(item.release_date || item.first_air_date).getFullYear()}</p>`;
+
+                li.innerHTML = `${poster}${title}${releaseYear}`;
+                resultsList.appendChild(li);
             });
         }
 
-        // Display pagination with only Next/Previous buttons
+        // Display pagination
         function displayPagination() {
             const pagination = document.getElementById('pagination');
             pagination.innerHTML = '';
 
             const prevButton = document.createElement('button');
-            prevButton.textContent = 'Previous';
             prevButton.className = 'next-prev-btn';
+            prevButton.textContent = 'Previous';
             prevButton.disabled = currentPage === 1;
-            prevButton.addEventListener('click', () => fetchResults(currentPage - 1));
+            prevButton.onclick = () => fetchResults(currentPage - 1);
             pagination.appendChild(prevButton);
 
             const nextButton = document.createElement('button');
-            nextButton.textContent = 'Next';
             nextButton.className = 'next-prev-btn';
+            nextButton.textContent = 'Next';
             nextButton.disabled = currentPage === totalPages;
-            nextButton.addEventListener('click', () => fetchResults(currentPage + 1));
+            nextButton.onclick = () => fetchResults(currentPage + 1);
             pagination.appendChild(nextButton);
         }
 
-        // Display detailed information for a selected movie or TV show
+        // Display details for the selected movie or TV show
         async function displayDetails(item) {
-            const detailsSection = document.getElementById('details');
-            const titleElement = document.getElementById('details-title');
-            const yearElement = document.getElementById('details-year');
-            const ratingElement = document.getElementById('details-rating');
-            const castElement = document.getElementById('details-cast');
-            const taglineElement = document.getElementById('details-tagline');
-            const genreElement = document.getElementById('details-genre');
-            const streamingElement = document.getElementById('details-streaming');
-            const similarElement = document.getElementById('details-similar');
+            const movieDetails = document.getElementById('movieDetails');
+            const movieTitle = document.getElementById('movieTitle');
+            const moviePoster = document.getElementById('moviePoster');
+            const movieYear = document.getElementById('movieYear');
+            const movieRating = document.getElementById('movieRating');
+            const movieTagline = document.getElementById('movieTagline');
+            const movieGenres = document.getElementById('movieGenres');
+            const movieCast = document.getElementById('movieCast');
+            const movieStreaming = document.getElementById('movieStreaming');
+            const movieSimilar = document.getElementById('movieSimilar');
 
-            // Clear previous details
-            titleElement.textContent = '';
-            yearElement.textContent = '';
-            ratingElement.textContent = '';
-            castElement.textContent = '';
-            taglineElement.textContent = '';
-            genreElement.textContent = '';
-            streamingElement.textContent = '';
-            similarElement.textContent = '';
+            movieTitle.textContent = item.title || item.name;
+            moviePoster.src = IMAGE_URL + item.poster_path;
+            movieYear.textContent = new Date(item.release_date || item.first_air_date).getFullYear();
+            movieRating.textContent = item.vote_average;
+            movieTagline.textContent = item.tagline || 'No tagline available';
+            movieGenres.textContent = item.genre_ids ? item.genre_ids.map(id => getGenreName(id)).join(', ') : 'No genres available';
+            
+            // Fetch cast
+            const cast = await fetchCast(item.id, item.media_type || 'movie');
+            movieCast.textContent = cast.length ? cast.join(', ') : 'No cast available';
 
+            // Streaming info
+            const streamingInfo = await fetchStreaming(item.id);
+            movieStreaming.textContent = streamingInfo ? streamingInfo : 'No streaming info available';
+
+            // Fetch similar movies or TV shows
+            const similarMovies = await fetchSimilar(item.id, item.media_type || 'movie');
+            movieSimilar.textContent = similarMovies.length ? similarMovies.join(', ') : 'No similar movies/TV shows available';
+
+            movieDetails.style.display = 'block';
+        }
+
+        // Get genre names from genre ids
+        async function getGenreName(id) {
+            const response = await fetch(`${API_URL}/genre/movie/list?api_key=${API_KEY}&language=en-US`);
+            const data = await response.json();
+            const genre = data.genres.find(genre => genre.id === id);
+            return genre ? genre.name : '';
+        }
+
+        // Fetch cast details
+        async function fetchCast(id, type) {
             try {
-                // Fetch movie or TV show details
-                const response = await fetch(`${API_URL}/${mediaType}/${item.id}?api_key=${API_KEY}&language=en-US`);
+                const response = await fetch(`${API_URL}/${type}/${id}/credits?api_key=${API_KEY}`);
                 const data = await response.json();
-
-                // Set the details
-                titleElement.textContent = `${data.title || data.name} (${new Date(data.release_date || data.first_air_date).getFullYear()})`;
-                yearElement.textContent = `Year: ${new Date(data.release_date || data.first_air_date).getFullYear()}`;
-                ratingElement.textContent = `Rating: ${data.vote_average}`;
-                castElement.textContent = `Cast: ${data.cast ? data.cast.slice(0, 5).map(actor => actor.name).join(', ') : 'N/A'}`;
-                taglineElement.textContent = `Tagline: ${data.tagline || 'N/A'}`;
-                genreElement.textContent = `Genre: ${data.genres ? data.genres.map(genre => genre.name).join(', ') : 'N/A'}`;
-                streamingElement.textContent = `Streaming: ${data.providers ? data.providers.join(', ') : 'N/A'}`;
-                similarElement.textContent = `Similar: ${data.similar ? data.similar.map(similarItem => similarItem.title || similarItem.name).join(', ') : 'N/A'}`;
-
-                // Display the details section
-                detailsSection.style.display = 'block';
+                return data.cast.slice(0, 5).map(c => c.name);
             } catch (error) {
-                console.error('Error fetching details:', error);
+                console.error('Error fetching cast:', error);
+                return [];
             }
         }
 
-        // Initialize genres and year options
-        fetchGenres();
-        populateYearSelect();
+        // Fetch streaming availability
+        async function fetchStreaming(id) {
+            try {
+                const response = await fetch(`${API_URL}/movie/${id}/watch/providers?api_key=${API_KEY}`);
+                const data = await response.json();
+                const providers = data.results['US']; // Assuming US streaming providers
+                if (providers) {
+                    return providers.flatrate ? providers.flatrate.map(p => p.provider_name).join(', ') : 'Not available';
+                } else {
+                    return 'Not available';
+                }
+            } catch (error) {
+                console.error('Error fetching streaming:', error);
+                return 'Not available';
+            }
+        }
+
+        // Fetch similar movies or TV shows
+        async function fetchSimilar(id, type) {
+            try {
+                const response = await fetch(`${API_URL}/${type}/${id}/similar?api_key=${API_KEY}`);
+                const data = await response.json();
+                return data.results.slice(0, 5).map(item => item.title || item.name);
+            } catch (error) {
+                console.error('Error fetching similar movies:', error);
+                return [];
+            }
+        }
+
+        // Initialize everything
+        window.onload = () => {
+            fetchGenres();
+            populateYearSelect();
+            fetchResults();
+        };
     </script>
 </body>
 </html>
