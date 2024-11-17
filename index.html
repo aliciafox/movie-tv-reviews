@@ -110,6 +110,27 @@
             background-color: #7f8c8d;
             cursor: not-allowed;
         }
+
+        #movieDetails {
+            display: none;
+            background-color: #34495e;
+            padding: 20px;
+            margin-top: 20px;
+            color: #ecf0f1;
+            border-radius: 8px;
+            text-align: left;
+            max-width: 1200px;
+            margin: auto;
+        }
+
+        #movieDetails h2 {
+            font-size: 2rem;
+            margin-bottom: 10px;
+        }
+
+        #movieDetails p {
+            margin: 5px 0;
+        }
     </style>
 </head>
 <body>
@@ -126,6 +147,18 @@
         <button onclick="fetchResults()">Search</button>
         <ul id="results"></ul>
         <div id="pagination"></div>
+
+        <!-- Movie Details -->
+        <div id="movieDetails">
+            <h2></h2>
+            <p><strong>Release Year:</strong> <span id="releaseYear"></span></p>
+            <p><strong>Rating:</strong> <span id="rating"></span></p>
+            <p><strong>Genres:</strong> <span id="genres"></span></p>
+            <p><strong>Tagline:</strong> <span id="tagline"></span></p>
+            <p><strong>Cast:</strong> <span id="cast"></span></p>
+            <p><strong>Streaming:</strong> <span id="streaming"></span></p>
+            <p><strong>Overview:</strong> <span id="overview"></span></p>
+        </div>
     </main>
 
     <script>
@@ -135,11 +168,8 @@
 
         let currentPage = 1;
         let totalPages = 1;
-
-        // Get the current year
         const currentYear = new Date().getFullYear();
 
-        // Fetch and populate genres
         async function fetchGenres() {
             try {
                 const response = await fetch(`${API_URL}/genre/movie/list?api_key=${API_KEY}&language=en-US`);
@@ -156,7 +186,6 @@
             }
         }
 
-        // Fetch and populate years
         function populateYearSelect() {
             const yearSelect = document.getElementById('yearSelect');
             for (let year = 1920; year <= currentYear; year++) {
@@ -167,7 +196,6 @@
             }
         }
 
-        // Fetch results based on filters and display them
         async function fetchResults(page = 1) {
             const searchInput = document.getElementById('searchInput').value;
             const genreInput = document.getElementById('genreSelect').value;
@@ -188,10 +216,9 @@
                 totalPages = data.total_pages;
                 currentPage = page;
 
-                // Filter out movies that were released in a future year
                 const filteredMovies = data.results.filter(movie => {
                     const releaseYear = new Date(movie.release_date).getFullYear();
-                    return releaseYear <= currentYear; // Keep only movies released in this year or earlier
+                    return releaseYear <= currentYear;
                 });
 
                 displayResults(filteredMovies);
@@ -201,7 +228,6 @@
             }
         }
 
-        // Display movie results
         function displayResults(movies) {
             const results = document.getElementById('results');
             results.innerHTML = '';
@@ -216,15 +242,17 @@
 
                 item.innerHTML = `${poster}${title}${releaseDate}${rating}`;
                 results.appendChild(item);
+
+                item.addEventListener('click', () => {
+                    showDetails(movie.id);
+                });
             });
         }
 
-        // Display pagination with only Next/Previous buttons
         function displayPagination() {
             const pagination = document.getElementById('pagination');
             pagination.innerHTML = '';
 
-            // Previous button
             const prevButton = document.createElement('button');
             prevButton.textContent = 'Previous';
             prevButton.className = 'next-prev-btn';
@@ -236,7 +264,6 @@
             });
             pagination.appendChild(prevButton);
 
-            // Next button
             const nextButton = document.createElement('button');
             nextButton.textContent = 'Next';
             nextButton.className = 'next-prev-btn';
@@ -249,12 +276,47 @@
             pagination.appendChild(nextButton);
         }
 
-        // Fetch latest movies ranked by highest rating on page load
-        window.onload = () => {
-            fetchResults(1); // Automatically load the first page of highest-rated movies on page load
-            fetchGenres();  // Populate genre dropdown
-            populateYearSelect();  // Populate year dropdown
-        };
+        async function showDetails(movieId) {
+            const movieDetailsDiv = document.getElementById('movieDetails');
+            const detailsTitle = document.querySelector('#movieDetails h2');
+            const releaseYear = document.getElementById('releaseYear');
+            const rating = document.getElementById('rating');
+            const genres = document.getElementById('genres');
+            const tagline = document.getElementById('tagline');
+            const cast = document.getElementById('cast');
+            const streaming = document.getElementById('streaming');
+            const overview = document.getElementById('overview');
+
+            try {
+                const movieResponse = await fetch(`${API_URL}/movie/${movieId}?api_key=${API_KEY}&language=en-US`);
+                const movieData = await movieResponse.json();
+
+                const castResponse = await fetch(`${API_URL}/movie/${movieId}/credits?api_key=${API_KEY}`);
+                const castData = await castResponse.json();
+
+                const streamingResponse = await fetch(`${API_URL}/movie/${movieId}/watch/providers?api_key=${API_KEY}`);
+                const streamingData = await streamingResponse.json();
+
+                detailsTitle.textContent = movieData.title;
+                releaseYear.textContent = new Date(movieData.release_date).getFullYear();
+                rating.textContent = movieData.vote_average;
+                genres.textContent = movieData.genres.map(genre => genre.name).join(', ');
+                tagline.textContent = movieData.tagline || 'N/A';
+                overview.textContent = movieData.overview || 'No overview available';
+
+                const castList = castData.cast.slice(0, 5).map(actor => actor.name).join(', ');
+                cast.textContent = castList || 'No cast available';
+
+                streaming.textContent = streamingData.results ? Object.keys(streamingData.results).join(', ') : 'No streaming information available';
+
+                movieDetailsDiv.style.display = 'block';
+            } catch (error) {
+                console.error('Error fetching movie details:', error);
+            }
+        }
+
+        fetchGenres();
+        populateYearSelect();
     </script>
 </body>
 </html>
