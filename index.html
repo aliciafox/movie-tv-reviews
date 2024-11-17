@@ -219,10 +219,10 @@
 
             let query = `${API_URL}/discover/${searchType}?api_key=${API_KEY}&language=en-US&page=${page}&sort_by=release_date.desc`;
 
-            if (searchInput) query += `&query=${searchInput}`;
+            if (searchInput) query += `&query=${encodeURIComponent(searchInput)}`;
             if (genreInput) query += `&with_genres=${genreInput}`;
             if (yearInput) query += `&primary_release_year=${yearInput}`;
-            if (languageInput) query += `&language=${languageInput}`;
+            if (languageInput) query += `&with_original_language=${languageInput}`;
             if (ratingInput) query += `&vote_average.gte=${ratingInput}`;
 
             // Ensure no future movies are shown
