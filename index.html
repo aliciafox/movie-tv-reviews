@@ -183,6 +183,7 @@
             if (searchInput) query += `&query=${searchInput}`;
             if (genreInput) query += `&with_genres=${genreInput}`;
             if (yearInput) query += `&primary_release_year=${yearInput}`;
+            else query += `&primary_release_date.lte=${currentYear}-12-31`; // Ensure no future movies are shown
 
             try {
                 const response = await fetch(query);
@@ -246,14 +247,11 @@
         window.onload = () => {
             fetchGenres();
             populateYearSelect();
-            fetchResults(currentPage);
+            fetchResults(); // Fetch popular items on load
         };
 
         // Fetch genres dynamically when search type changes
-        document.getElementById('searchType').addEventListener('change', () => {
-            fetchGenres();
-            fetchResults(currentPage);
-        });
+        document.getElementById('searchType').addEventListener('change', fetchGenres);
     </script>
 </body>
 </html>
