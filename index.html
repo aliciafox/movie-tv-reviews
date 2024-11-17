@@ -109,7 +109,6 @@
             <option value="movie">Movies</option>
             <option value="tv">TV Shows</option>
         </select>
-        <input type="text" id="searchInput" placeholder="Search by title...">
         <select id="genreSelect">
             <option value="">Select Genre</option>
         </select>
@@ -117,7 +116,7 @@
             <option value="">Select Year</option>
         </select>
         <select id="languageSelect">
-            <option value="">Select Language</option>
+            <!-- Language options will be populated here -->
         </select>
         <button onclick="fetchResults()">Search</button>
         <ul id="results"></ul>
@@ -155,7 +154,7 @@
         // Populate languages
         async function fetchLanguages() {
             const languageSelect = document.getElementById('languageSelect');
-            if (languageSelect.options.length > 1) return; // Prevent re-fetching
+            if (languageSelect.options.length > 0) return; // Prevent re-fetching
 
             try {
                 const response = await fetch(`${API_URL}/configuration/languages?api_key=${API_KEY}`);
@@ -195,14 +194,12 @@
         // Fetch results
         async function fetchResults(page = 1) {
             const searchType = document.getElementById('searchType').value;
-            const searchInput = document.getElementById('searchInput').value;
             const genreInput = document.getElementById('genreSelect').value;
             const yearInput = document.getElementById('yearSelect').value;
             const languageInput = document.getElementById('languageSelect').value;
 
             let query = `${API_URL}/discover/${searchType}?api_key=${API_KEY}&language=en-US&page=${page}&sort_by=popularity.desc`;
 
-            if (searchInput) query += `&query=${searchInput}`;
             if (genreInput) query += `&with_genres=${genreInput}`;
             if (yearInput) query += `&primary_release_year=${yearInput}`;
             if (languageInput) query += `&with_original_language=${languageInput}`;
@@ -269,4 +266,5 @@
     </script>
 </body>
 </html>
+
 
