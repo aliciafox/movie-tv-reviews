@@ -160,8 +160,11 @@
                 const response = await fetch(`${API_URL}/configuration/languages?api_key=${API_KEY}`);
                 const data = await response.json();
 
+                // Filter out empty or blank languages
+                const filteredLanguages = data.filter(language => language.iso_639_1 && language.name.trim());
+
                 // Sort languages alphabetically, placing English first
-                const sortedLanguages = data.sort((a, b) => {
+                const sortedLanguages = filteredLanguages.sort((a, b) => {
                     if (a.iso_639_1 === 'en') return -1; // Move English to the top
                     if (b.iso_639_1 === 'en') return 1;
                     return a.name.localeCompare(b.name); // Alphabetical sorting for others
@@ -261,10 +264,8 @@
             fetchGenres();
             fetchLanguages();
             populateYearSelect();
-            fetchResults(); // Load the first page of movies/shows
         };
     </script>
 </body>
 </html>
-
 
