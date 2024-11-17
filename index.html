@@ -91,11 +91,30 @@
             color: #f39c12;
         }
 
-        .country {
+        .language {
             font-size: 0.8rem;
             margin-top: 5px;
             color: #ecf0f1;
         }
+
+        .pagination {
+            margin-top: 20px;
+            text-align: center;
+        }
+
+        .pagination button {
+            background-color: #34495e;
+            color: white;
+            margin: 0 5px;
+            cursor: pointer;
+            padding: 10px;
+            border-radius: 5px;
+        }
+
+        .pagination button:hover {
+            background-color: #f39c12;
+        }
+
     </style>
 </head>
 <body>
@@ -114,6 +133,8 @@
         </select>
         <button onclick="fetchResults()">Search</button>
         <ul id="results"></ul>
+
+        <div id="pagination" class="pagination"></div>
     </main>
 
     <script>
@@ -122,6 +143,8 @@
         const IMAGE_URL = 'https://image.tmdb.org/t/p/w500';
 
         const currentYear = new Date().getFullYear();
+        let currentPage = 1;
+        let totalPages = 1;
 
         // Populate genres
         async function fetchGenres() {
@@ -156,13 +179,13 @@
         }
 
         // Fetch results
-        async function fetchResults() {
+        async function fetchResults(page = 1) {
             const searchType = document.getElementById('searchType').value;
             const searchInput = document.getElementById('searchInput').value;
             const genreInput = document.getElementById('genreSelect').value;
             const yearInput = document.getElementById('yearSelect').value;
 
-            let query = `${API_URL}/discover/${searchType}?api_key=${API_KEY}&language=en-US&page=1&sort_by=release_date.desc`;
+            let query = `${API_URL}/discover/${searchType}?api_key=${API_KEY}&language=en-US&page=${page}&sort_by=release_date.desc`;
 
             if (searchInput) query += `&query=${searchInput}`;
             if (genreInput) query += `&with_genres=${genreInput}`;
@@ -172,7 +195,10 @@
             try {
                 const response = await fetch(query);
                 const data = await response.json();
+                totalPages = data.total_pages;
+                currentPage = page;
                 displayResults(data.results);
+                setupPagination();
             } catch (error) {
                 console.error('Error fetching results:', error);
                 alert('Failed to fetch results. Please try again later.');
@@ -200,14 +226,32 @@
                 // Rating (if available)
                 const rating = item.vote_average ? `<div class="rating">Rating: ${item.vote_average.toFixed(1)}</div>` : '';
 
-                // Country (if available)
-                const country = item.production_countries && item.production_countries.length > 0
-                    ? `<div class="country">Country: ${item.production_countries[0].name}</div>`
-                    : '<div class="country">Country: Not Available</div>';
+                // Language (if available)
+                const language = item.original_language ? `<div class="language">Language: ${item.original_language.toUpperCase()}</div>` : '';
 
-                resultItem.innerHTML = `${poster}${title}${releaseDate}${rating}${country}`;
+                resultItem.innerHTML = `${poster}${title}${releaseDate}${rating}${language}`;
                 results.appendChild(resultItem);
             });
+        }
+
+        // Setup pagination
+        function setupPagination() {
+            const pagination = document.getElementById('pagination');
+            pagination.innerHTML = '';
+
+            if (currentPage > 1) {
+                const prevButton = document.createElement('button');
+                prevButton.textContent = 'Previous';
+                prevButton.onclick = () => fetchResults(currentPage - 1);
+                pagination.appendChild(prevButton);
+            }
+
+            if (currentPage < totalPages) {
+                const nextButton = document.createElement('button');
+                nextButton.textContent = 'Next';
+                nextButton.onclick = () => fetchResults(currentPage + 1);
+                pagination.appendChild(nextButton);
+            }
         }
 
         // Populate genres and years on page load
@@ -215,11 +259,8 @@
             fetchGenres();
             populateYearSelect();
         };
-
-        // Fetch genres dynamically when search type changes
-        document.getElementById('searchType').addEventListener('change', fetchGenres);
-
     </script>
 </body>
 </html>
+
 
