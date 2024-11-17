@@ -94,6 +94,18 @@
         .pagination button {
             margin: 0 5px;
         }
+
+        .rating {
+            margin-top: 5px;
+            font-size: 1rem;
+            color: #f39c12;
+        }
+
+        .country {
+            font-size: 0.8rem;
+            margin-top: 5px;
+            color: #ecf0f1;
+        }
     </style>
 </head>
 <body>
@@ -202,7 +214,15 @@
                 const title = `<h3>${item.title || item.name}</h3>`;
                 const releaseDate = `<p>Year: ${new Date(item.release_date || item.first_air_date).getFullYear()}</p>`;
 
-                resultItem.innerHTML = `${poster}${title}${releaseDate}`;
+                // Rating (if available)
+                const rating = item.vote_average ? `<div class="rating">Rating: ${item.vote_average.toFixed(1)}</div>` : '';
+
+                // Country (if available)
+                const country = item.production_countries && item.production_countries.length > 0
+                    ? `<div class="country">Country: ${item.production_countries[0].name}</div>`
+                    : '';
+
+                resultItem.innerHTML = `${poster}${title}${releaseDate}${rating}${country}`;
                 results.appendChild(resultItem);
             });
         }
@@ -237,3 +257,4 @@
     </script>
 </body>
 </html>
+
