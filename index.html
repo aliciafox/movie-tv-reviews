@@ -85,16 +85,6 @@
             margin: 5px 0;
         }
 
-        .pagination {
-            display: flex;
-            justify-content: center;
-            margin-top: 20px;
-        }
-
-        .pagination button {
-            margin: 0 5px;
-        }
-
         .rating {
             margin-top: 5px;
             font-size: 1rem;
@@ -124,10 +114,6 @@
         </select>
         <button onclick="fetchResults()">Search</button>
         <ul id="results"></ul>
-        <div class="pagination">
-            <button id="prevPage" onclick="changePage('prev')" disabled>Previous</button>
-            <button id="nextPage" onclick="changePage('next')" disabled>Next</button>
-        </div>
     </main>
 
     <script>
@@ -136,10 +122,8 @@
         const IMAGE_URL = 'https://image.tmdb.org/t/p/w500';
 
         const currentYear = new Date().getFullYear();
-        let currentPage = 1;
-        let totalPages = 1;
 
-        // Populate genres (only fetch once)
+        // Populate genres
         async function fetchGenres() {
             const searchType = document.getElementById('searchType').value; // "movie" or "tv"
             const genreSelect = document.getElementById('genreSelect');
@@ -171,14 +155,14 @@
             }
         }
 
-        // Fetch results with pagination
-        async function fetchResults(page = 1) {
+        // Fetch results
+        async function fetchResults() {
             const searchType = document.getElementById('searchType').value;
             const searchInput = document.getElementById('searchInput').value;
             const genreInput = document.getElementById('genreSelect').value;
             const yearInput = document.getElementById('yearSelect').value;
 
-            let query = `${API_URL}/discover/${searchType}?api_key=${API_KEY}&language=en-US&page=${page}&sort_by=release_date.desc`;
+            let query = `${API_URL}/discover/${searchType}?api_key=${API_KEY}&language=en-US&page=1&sort_by=release_date.desc`;
 
             if (searchInput) query += `&query=${searchInput}`;
             if (genreInput) query += `&with_genres=${genreInput}`;
@@ -189,8 +173,6 @@
                 const response = await fetch(query);
                 const data = await response.json();
                 displayResults(data.results);
-                totalPages = data.total_pages;
-                updatePaginationButtons();
             } catch (error) {
                 console.error('Error fetching results:', error);
                 alert('Failed to fetch results. Please try again later.');
@@ -221,37 +203,22 @@
                 // Country (if available)
                 const country = item.production_countries && item.production_countries.length > 0
                     ? `<div class="country">Country: ${item.production_countries[0].name}</div>`
-                    : '';
+                    : '<div class="country">Country: Not Available</div>';
 
                 resultItem.innerHTML = `${poster}${title}${releaseDate}${rating}${country}`;
                 results.appendChild(resultItem);
             });
         }
 
-        // Handle pagination
-        function updatePaginationButtons() {
-            document.getElementById('prevPage').disabled = currentPage <= 1;
-            document.getElementById('nextPage').disabled = currentPage >= totalPages;
-        }
-
-        function changePage(direction) {
-            if (direction === 'next' && currentPage < totalPages) {
-                currentPage++;
-            } else if (direction === 'prev' && currentPage > 1) {
-                currentPage--;
-            }
-            fetchResults(currentPage);
-        }
-
         // Populate genres and years on page load
         window.onload = () => {
             fetchGenres();
             populateYearSelect();
-            fetchResults(); // Fetch popular items on load
         };
 
         // Fetch genres dynamically when search type changes
         document.getElementById('searchType').addEventListener('change', fetchGenres);
+
     </script>
 </body>
 </html>
