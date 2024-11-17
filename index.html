@@ -1,173 +1,221 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Movie and TV Search</title>
     <style>
-        body {
-            font-family: 'Arial', sans-serif;
-            margin: 0;
-            padding: 0;
-            background-color: #2c3e50;
-            color: #ecf0f1;
-        }
+      body {
+        font-family: "Arial", sans-serif;
+        margin: 0;
+        padding: 0;
+        background-color: #2c3e50;
+        color: #ecf0f1;
+      }
 
-        header {
-            text-align: center;
-            padding: 20px;
-            background-color: #34495e;
-            font-size: 2.5rem;
-            font-weight: bold;
-            color: #f39c12;
-        }
+      header {
+        text-align: center;
+        padding: 20px;
+        background-color: #34495e;
+        font-size: 2.5rem;
+        font-weight: bold;
+        color: #f39c12;
+      }
 
-        main {
-            max-width: 1200px;
-            margin: auto;
-            padding: 20px;
-            text-align: center;
-        }
+      main {
+        max-width: 1200px;
+        margin: auto;
+        padding: 20px;
+        text-align: center;
+      }
 
-        input, select, button {
-            padding: 10px;
-            margin: 10px;
-            width: 100%;
-            max-width: 400px;
-            font-size: 1.1rem;
-            border: none;
-            border-radius: 5px;
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
-        }
+      input,
+      select,
+      button {
+        padding: 10px;
+        margin: 10px;
+        width: 100%;
+        max-width: 400px;
+        font-size: 1.1rem;
+        border: none;
+        border-radius: 5px;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+      }
 
-        button {
-            background-color: #f39c12;
-            color: white;
-            cursor: pointer;
-        }
+      button {
+        background-color: #f39c12;
+        color: white;
+        cursor: pointer;
+      }
 
-        button:hover {
-            background-color: #e67e22;
-        }
+      button:hover {
+        background-color: #e67e22;
+      }
 
-        #results {
-            display: flex;
-            flex-wrap: wrap;
-            justify-content: space-around;
-            list-style-type: none;
-            padding: 0;
-            margin-top: 20px;
-        }
+      #results {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: space-around;
+        list-style-type: none;
+        padding: 0;
+        margin-top: 20px;
+      }
 
-        .result-item {
-            background-color: #34495e;
-            margin: 15px;
-            padding: 15px;
-            border-radius: 8px;
-            flex: 1 1 200px;
-            max-width: 220px;
-            text-align: center;
-        }
+      .result-item {
+        background-color: #34495e;
+        margin: 15px;
+        padding: 15px;
+        border-radius: 8px;
+        flex: 1 1 200px;
+        max-width: 220px;
+        text-align: center;
+      }
 
-        .result-item img {
-            width: 100%;
-            height: auto;
-            border-radius: 5px;
-        }
+      .result-item img {
+        width: 100%;
+        height: auto;
+        border-radius: 5px;
+      }
 
-        .result-item h3 {
-            margin: 10px 0;
-            font-size: 1.2rem;
-        }
+      .result-item h3 {
+        margin: 10px 0;
+        font-size: 1.2rem;
+      }
 
-        .result-item p {
-            font-size: 0.9rem;
-            margin: 5px 0;
-        }
+      .result-item p {
+        font-size: 0.9rem;
+        margin: 5px 0;
+      }
 
-        #pagination {
-            margin-top: 20px;
-        }
+      #pagination {
+        margin-top: 20px;
+      }
 
-        #pagination button {
-            padding: 10px;
-            margin: 0 10px;
-            background-color: #f39c12;
-            color: white;
-            cursor: pointer;
-        }
+      #pagination button {
+        padding: 10px;
+        margin: 0 10px;
+        background-color: #f39c12;
+        color: white;
+        cursor: pointer;
+      }
 
-        #pagination button:hover {
-            background-color: #e67e22;
-        }
+      #pagination button:hover {
+        background-color: #e67e22;
+      }
     </style>
-</head>
-<body>
+  </head>
+  <body>
     <header>Movie and TV Search</header>
     <main>
-        <select id="searchType">
-            <option value="movie">Movies</option>
-            <option value="tv">TV Shows</option>
-        </select>
-        <select id="genreSelect">
-            <option value="">Select Genre</option>
-        </select>
-        <select id="yearSelect">
-            <option value="">Select Year</option>
-        </select>
-        <select id="languageSelect">
-            <!-- Language options will be populated here -->
-        </select>
-        <button onclick="fetchResults()">Search</button>
-        <ul id="results"></ul>
-        <div id="pagination"></div>
+      <select id="searchType">
+        <option value="movie">Movies</option>
+        <option value="tv">TV Shows</option>
+      </select>
+      <select id="genreSelect">
+        <option value="">Select Genre</option>
+      </select>
+      <select id="yearSelect">
+        <option value="">Select Year</option>
+      </select>
+      <select id="languageSelect">
+        <!-- Language options will be populated here -->
+      </select>
+      <button onclick="fetchResults()">Search</button>
+      <ul id="results"></ul>
+      <div id="pagination"></div>
     </main>
 
     <script>
-        const API_KEY = '3f2fe61ae14a656e1ad11ff26b0d0594'; // Replace with your valid TMDB API key
-        const API_URL = 'https://api.themoviedb.org/3';
-        const IMAGE_URL = 'https://image.tmdb.org/t/p/w500';
+              const API_KEY = '3f2fe61ae14a656e1ad11ff26b0d0594'; // Replace with your valid TMDB API key
+              const API_URL = 'https://api.themoviedb.org/3';
+              const IMAGE_URL = 'https://image.tmdb.org/t/p/w500';
 
-        const currentYear = new Date().getFullYear();
-        let currentPage = 1;
-        let totalPages = 1;
+              const currentYear = new Date().getFullYear();
+              let currentPage = 1;
+              let totalPages = 1;
 
-        // Populate genres
-        async function fetchGenres() {
-            const searchType = document.getElementById('searchType').value; // "movie" or "tv"
-            try {
-                const response = await fetch(`${API_URL}/genre/${searchType}/list?api_key=${API_KEY}&language=en-US`);
-                const data = await response.json();
-                const genreSelect = document.getElementById('genreSelect');
-                genreSelect.innerHTML = '<option value="">Select Genre</option>'; // Clear old genres
-                data.genres.forEach(genre => {
-                    const option = document.createElement('option');
-                    option.value = genre.id;
-                    option.textContent = genre.name;
-                    genreSelect.appendChild(option);
-                });
-            } catch (error) {
-                console.error('Error fetching genres:', error);
-            }
-        }
+              // Populate genres
+              async function fetchGenres() {
+                  const searchType = document.getElementById('searchType').value; // "movie" or "tv"
+                  try {
+                      const response = await fetch(`${API_URL}/genre/${searchType}/list?api_key=${API_KEY}&language=en-US`);
+                      const data = await response.json();
+                      const genreSelect = document.getElementById('genreSelect');
+                      genreSelect.innerHTML = '<option value="">Select Genre</option>'; // Clear old genres
+                      data.genres.forEach(genre => {
+                          const option = document.createElement('option');
+                          option.value = genre.id;
+                          option.textContent = genre.name;
+                          genreSelect.appendChild(option);
+                      });
+                  } catch (error) {
+                      console.error('Error fetching genres:', error);
+                  }
+              }
 
-// Populate languages
-async function fetchLanguages() {
+      // Populate languages
+      async function fetchLanguages() {
+          const languageSelect = document.getElementById('languageSelect');
+          if (languageSelect.options.length > 0) return; // Prevent re-fetching
+
+          try {
+              const response = await fetch(`${API_URL}/configuration/languages?api_key=${API_KEY}`);
+              const data = await response.json();
+
+              // Filter out empty or blank languages
+              const filteredLanguages = data.filter(language => language.iso_639_1 && language.name.trim());
+
+              // Add an "All Languages" option
+              const allLanguagesOption = document.createElement('option');
+              allLanguagesOption.value = '';
+              allLanguagesOption.textContent = 'All Languages';
+              languageSelect.appendChild(allLanguagesOption);
+
+              // Sort languages alphabetically, placing English first
+              const sortedLanguages = filteredLanguages.sort((a, b) => {
+                  if (a.iso_639_1 === 'en') return -1; // Move English to the top
+                  if (b.iso_639_1 === 'en') return 1;
+                  return a.name.localeCompare(b.name); // Alphabetical sorting for others
+              });
+
+              // Replace "?????" and "??????" with "Kannada" and "Kyrgyz"
+              sortedLanguages.forEach(language => {
+                  if (language.name === '?????') language.name = 'Kannada';
+                  if (language.name === '??????') language.name = 'Kyrgyz';
+
+                  const option = document.createElement('option');
+                  option.value = language.iso_639_1;
+                  option.textContent = language.name.replace(/\s+/g, ''); // Remove spaces from language names
+                  languageSelect.appendChild(option);
+              });
+          } catch (error) {
+              console.error('Error fetching languages:', error);
+          }
+      }
+
+
+      async function fetchLanguages() {
     const languageSelect = document.getElementById('languageSelect');
     if (languageSelect.options.length > 0) return; // Prevent re-fetching
 
     try {
         const response = await fetch(`${API_URL}/configuration/languages?api_key=${API_KEY}`);
+        
+        // Check if the response is successful
+        if (!response.ok) {
+            throw new Error('Failed to fetch languages, status: ' + response.status);
+        }
+
         const data = await response.json();
+        console.log('Languages data:', data); // Log the data to see what the API returns
 
         // Filter out empty or blank languages
         const filteredLanguages = data.filter(language => language.iso_639_1 && language.name.trim());
 
-        // Add an "All Languages" option
-        const allLanguagesOption = document.createElement('option');
-        allLanguagesOption.value = '';
-        allLanguagesOption.textContent = 'All Languages';
-        languageSelect.appendChild(allLanguagesOption);
+        // Check if we have the expected data format
+        if (!Array.isArray(filteredLanguages)) {
+            throw new Error('Languages data is not in expected format.');
+        }
 
         // Sort languages alphabetically, placing English first
         const sortedLanguages = filteredLanguages.sort((a, b) => {
@@ -176,11 +224,8 @@ async function fetchLanguages() {
             return a.name.localeCompare(b.name); // Alphabetical sorting for others
         });
 
-        // Replace "?????" and "??????" with "Kannada" and "Kyrgyz"
+        // Add language options
         sortedLanguages.forEach(language => {
-            if (language.name === '?????') language.name = 'Kannada';
-            if (language.name === '??????') language.name = 'Kyrgyz';
-
             const option = document.createElement('option');
             option.value = language.iso_639_1;
             option.textContent = language.name.replace(/\s+/g, ''); // Remove spaces from language names
@@ -192,102 +237,92 @@ async function fetchLanguages() {
 }
 
 
-                // Add language options
-                sortedLanguages.forEach(language => {
-                    const option = document.createElement('option');
-                    option.value = language.iso_639_1;
-                    option.textContent = language.name.replace(/\s+/g, ''); // Remove spaces from language names
-                    languageSelect.appendChild(option);
-                });
-            } catch (error) {
-                console.error('Error fetching languages:', error);
-            }
-        }
 
-        // Populate years
-        function populateYearSelect() {
-            const yearSelect = document.getElementById('yearSelect');
-            yearSelect.innerHTML = '<option value="">Select Year</option>'; // Clear old years
-            for (let year = currentYear; year >= 1920; year--) {
-                const option = document.createElement('option');
-                option.value = year;
-                option.textContent = year;
-                yearSelect.appendChild(option);
-            }
-        }
+              // Populate years
+              function populateYearSelect() {
+                  const yearSelect = document.getElementById('yearSelect');
+                  yearSelect.innerHTML = '<option value="">Select Year</option>'; // Clear old years
+                  for (let year = currentYear; year >= 1920; year--) {
+                      const option = document.createElement('option');
+                      option.value = year;
+                      option.textContent = year;
+                      yearSelect.appendChild(option);
+                  }
+              }
 
-        // Fetch results
-        async function fetchResults(page = 1) {
-            const searchType = document.getElementById('searchType').value;
-            const genreInput = document.getElementById('genreSelect').value;
-            const yearInput = document.getElementById('yearSelect').value;
-            const languageInput = document.getElementById('languageSelect').value;
+              // Fetch results
+              async function fetchResults(page = 1) {
+                  const searchType = document.getElementById('searchType').value;
+                  const genreInput = document.getElementById('genreSelect').value;
+                  const yearInput = document.getElementById('yearSelect').value;
+                  const languageInput = document.getElementById('languageSelect').value;
 
-            let query = `${API_URL}/discover/${searchType}?api_key=${API_KEY}&language=en-US&page=${page}&sort_by=release_date.desc,vote_average.desc`;
+                  let query = `${API_URL}/discover/${searchType}?api_key=${API_KEY}&language=en-US&page=${page}&sort_by=release_date.desc,vote_average.desc`;
 
-            if (genreInput) query += `&with_genres=${genreInput}`;
-            if (yearInput) query += `&primary_release_year=${yearInput}`;
-            if (languageInput) query += `&with_original_language=${languageInput}`;
+                  if (genreInput) query += `&with_genres=${genreInput}`;
+                  if (yearInput) query += `&primary_release_year=${yearInput}`;
+                  if (languageInput) query += `&with_original_language=${languageInput}`;
 
-            try {
-                const response = await fetch(query);
-                const data = await response.json();
-                totalPages = data.total_pages;
-                currentPage = page;
-                displayResults(data.results, searchType);
-                setupPagination();
-            } catch (error) {
-                console.error('Error fetching results:', error);
-            }
-        }
+                  try {
+                      const response = await fetch(query);
+                      const data = await response.json();
+                      totalPages = data.total_pages;
+                      currentPage = page;
+                      displayResults(data.results, searchType);
+                      setupPagination();
+                  } catch (error) {
+                      console.error('Error fetching results:', error);
+                  }
+              }
 
-        // Display results
-        function displayResults(items, searchType) {
-            const results = document.getElementById('results');
-            results.innerHTML = '';
+              // Display results
+              function displayResults(items, searchType) {
+                  const results = document.getElementById('results');
+                  results.innerHTML = '';
 
-            items.forEach(item => {
-                const resultItem = document.createElement('li');
-                resultItem.className = 'result-item';
+                  items.forEach(item => {
+                      const resultItem = document.createElement('li');
+                      resultItem.className = 'result-item';
 
-                const poster = item.poster_path ? `<img src="${IMAGE_URL + item.poster_path}" alt="${item.title || item.name}">` : '';
-                const title = `<h3>${item.title || item.name}</h3>`;
-                const releaseDate = `<p>Year: ${new Date(item.release_date || item.first_air_date).getFullYear()}</p>`;
-                const rating = item.vote_average ? `<p class="rating">Rating: ${Math.round(item.vote_average)}</p>` : '';
-                const language = item.original_language ? `<p class="language">Language: ${item.original_language.toUpperCase()}</p>` : '';
+                      const poster = item.poster_path ? `<img src="${IMAGE_URL + item.poster_path}" alt="${item.title || item.name}">` : '';
+                      const title = `<h3>${item.title || item.name}</h3>`;
+                      const releaseDate = `<p>Year: ${new Date(item.release_date || item.first_air_date).getFullYear()}</p>`;
+                      const rating = item.vote_average ? `<p class="rating">Rating: ${Math.round(item.vote_average)}</p>` : '';
+                      const language = item.original_language ? `<p class="language">Language: ${item.original_language.toUpperCase()}</p>` : '';
 
-                resultItem.innerHTML = `${poster}${title}${releaseDate}${rating}${language}`;
-                results.appendChild(resultItem);
-            });
-        }
+                      resultItem.innerHTML = `${poster}${title}${releaseDate}${rating}${language}`;
+                      results.appendChild(resultItem);
+                  });
+              }
 
-        // Set up pagination
-        function setupPagination() {
-            const pagination = document.getElementById('pagination');
-            pagination.innerHTML = '';
+              // Set up pagination
+              function setupPagination() {
+                  const pagination = document.getElementById('pagination');
+                  pagination.innerHTML = '';
 
-            if (currentPage > 1) {
-                const prevButton = document.createElement('button');
-                prevButton.textContent = 'Previous';
-                prevButton.onclick = () => fetchResults(currentPage - 1);
-                pagination.appendChild(prevButton);
-            }
+                  if (currentPage > 1) {
+                      const prevButton = document.createElement('button');
+                      prevButton.textContent = 'Previous';
+                      prevButton.onclick = () => fetchResults(currentPage - 1);
+                      pagination.appendChild(prevButton);
+                  }
 
-            if (currentPage < totalPages) {
-                const nextButton = document.createElement('button');
-                nextButton.textContent = 'Next';
-                nextButton.onclick = () => fetchResults(currentPage + 1);
-                pagination.appendChild(nextButton);
-            }
-        }
+                  if (currentPage < totalPages) {
+                      const nextButton = document.createElement('button');
+                      nextButton.textContent = 'Next';
+                      nextButton.onclick = () => fetchResults(currentPage + 1);
+                      pagination.appendChild(nextButton);
+                  }
+              }
 
-        // Initialize on page load
-        window.onload = () => {
-            fetchGenres();
-            fetchLanguages();
-            populateYearSelect();
-            fetchResults(1); // Load the most recent movies sorted by rating
-        };
+              // Initialize on page load
+              window.onload = () => {
+                  fetchGenres();
+                  fetchLanguages();
+                  populateYearSelect();
+                  fetchResults(1); // Load the most recent movies sorted by rating
+              };
     </script>
-</body>
+  </body>
 </html>
+
