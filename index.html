@@ -134,8 +134,9 @@
         let currentPage = 1;
         let totalPages = 1;
 
-        // Get the current year
-        const currentYear = new Date().getFullYear();
+        // Get today's date to compare with movie release dates
+        const today = new Date();
+        const currentDateString = today.toISOString().split('T')[0]; // Format to YYYY-MM-DD
 
         // Fetch and populate genres
         async function fetchGenres() {
@@ -175,10 +176,10 @@
                 totalPages = data.total_pages;
                 currentPage = page;
 
-                // Filter out movies that were released in a future year
+                // Filter out movies that have a release date in the future
                 const filteredMovies = data.results.filter(movie => {
-                    const releaseYear = new Date(movie.release_date).getFullYear();
-                    return releaseYear <= currentYear; // Keep only movies released in this year or earlier
+                    const releaseDate = movie.release_date;
+                    return releaseDate <= currentDateString; // Keep only movies released up to today
                 });
 
                 displayResults(filteredMovies);
@@ -244,3 +245,4 @@
     </script>
 </body>
 </html>
+
