@@ -231,7 +231,7 @@
                 const poster = item.poster_path ? `<img src="${IMAGE_URL + item.poster_path}" alt="${item.title || item.name}">` : '';
                 const title = `<h3>${item.title || item.name}</h3>`;
                 const releaseDate = `<p>Year: ${new Date(item.release_date || item.first_air_date).getFullYear()}</p>`;
-                const rating = item.vote_average ? `<p class="rating">Rating: ${item.vote_average}</p>` : '';
+                const rating = item.vote_average ? `<p class="rating">Rating: ${Math.round(item.vote_average)}</p>` : '';
                 const language = item.original_language ? `<p class="language">Language: ${item.original_language.toUpperCase()}</p>` : '';
 
                 resultItem.innerHTML = `${poster}${title}${releaseDate}${rating}${language}`;
@@ -264,7 +264,9 @@
             fetchGenres();
             fetchLanguages();
             populateYearSelect();
+            fetchResults(); // Load the first page of movies/shows
         };
     </script>
 </body>
 </html>
+
