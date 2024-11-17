@@ -84,24 +84,38 @@
             font-size: 0.9rem;
             margin: 5px 0;
         }
+
+        .pagination {
+            display: flex;
+            justify-content: center;
+            margin-top: 20px;
+        }
+
+        .pagination button {
+            margin: 0 5px;
+        }
     </style>
 </head>
 <body>
     <header>Movie and TV Search</header>
     <main>
-        <select id="searchType">
+        <select id="searchType" aria-label="Select search type">
             <option value="movie">Movies</option>
             <option value="tv">TV Shows</option>
         </select>
-        <input type="text" id="searchInput" placeholder="Search by title...">
-        <select id="genreSelect">
+        <input type="text" id="searchInput" placeholder="Search by title..." aria-label="Search input">
+        <select id="genreSelect" aria-label="Select Genre">
             <option value="">Select Genre</option>
         </select>
-        <select id="yearSelect">
+        <select id="yearSelect" aria-label="Select Year">
             <option value="">Select Year</option>
         </select>
         <button onclick="fetchResults()">Search</button>
         <ul id="results"></ul>
+        <div class="pagination">
+            <button id="prevPage" onclick="changePage('prev')" disabled>Previous</button>
+            <button id="nextPage" onclick="changePage('next')" disabled>Next</button>
+        </div>
     </main>
 
     <script>
@@ -110,15 +124,18 @@
         const IMAGE_URL = 'https://image.tmdb.org/t/p/w500';
 
         const currentYear = new Date().getFullYear();
+        let currentPage = 1;
+        let totalPages = 1;
 
-        // Populate genres
+        // Populate genres (only fetch once)
         async function fetchGenres() {
             const searchType = document.getElementById('searchType').value; // "movie" or "tv"
+            const genreSelect = document.getElementById('genreSelect');
+            if (genreSelect.options.length > 1) return; // Prevent re-fetching
+
             try {
                 const response = await fetch(`${API_URL}/genre/${searchType}/list?api_key=${API_KEY}&language=en-US`);
                 const data = await response.json();
-                const genreSelect = document.getElementById('genreSelect');
-                genreSelect.innerHTML = '<option value="">Select Genre</option>'; // Clear old genres
                 data.genres.forEach(genre => {
                     const option = document.createElement('option');
                     option.value = genre.id;
@@ -142,14 +159,14 @@
             }
         }
 
-        // Fetch results
-        async function fetchResults() {
+        // Fetch results with pagination
+        async function fetchResults(page = 1) {
             const searchType = document.getElementById('searchType').value;
             const searchInput = document.getElementById('searchInput').value;
             const genreInput = document.getElementById('genreSelect').value;
             const yearInput = document.getElementById('yearSelect').value;
 
-            let query = `${API_URL}/discover/${searchType}?api_key=${API_KEY}&language=en-US&page=1&sort_by=popularity.desc`;
+            let query = `${API_URL}/discover/${searchType}?api_key=${API_KEY}&language=en-US&page=${page}&sort_by=release_date.desc`;
 
             if (searchInput) query += `&query=${searchInput}`;
             if (genreInput) query += `&with_genres=${genreInput}`;
@@ -158,16 +175,24 @@
             try {
                 const response = await fetch(query);
                 const data = await response.json();
-                displayResults(data.results, searchType);
+                displayResults(data.results);
+                totalPages = data.total_pages;
+                updatePaginationButtons();
             } catch (error) {
                 console.error('Error fetching results:', error);
+                alert('Failed to fetch results. Please try again later.');
             }
         }
 
         // Display results
-        function displayResults(items, searchType) {
+        function displayResults(items) {
             const results = document.getElementById('results');
             results.innerHTML = '';
+
+            if (items.length === 0) {
+                results.innerHTML = '<p>No results found. Try a different search.</p>';
+                return;
+            }
 
             items.forEach(item => {
                 const resultItem = document.createElement('li');
@@ -182,17 +207,33 @@
             });
         }
 
+        // Handle pagination
+        function updatePaginationButtons() {
+            document.getElementById('prevPage').disabled = currentPage <= 1;
+            document.getElementById('nextPage').disabled = currentPage >= totalPages;
+        }
+
+        function changePage(direction) {
+            if (direction === 'next' && currentPage < totalPages) {
+                currentPage++;
+            } else if (direction === 'prev' && currentPage > 1) {
+                currentPage--;
+            }
+            fetchResults(currentPage);
+        }
+
         // Populate genres and years on page load
         window.onload = () => {
             fetchGenres();
             populateYearSelect();
-
-            // Automatically load popular movies
-            fetchResults();
+            fetchResults(currentPage);
         };
 
         // Fetch genres dynamically when search type changes
-        document.getElementById('searchType').addEventListener('change', fetchGenres);
+        document.getElementById('searchType').addEventListener('change', () => {
+            fetchGenres();
+            fetchResults(currentPage);
+        });
     </script>
 </body>
 </html>
