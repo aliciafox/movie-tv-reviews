@@ -131,6 +131,17 @@
         <select id="yearSelect" aria-label="Select Year">
             <option value="">Select Year</option>
         </select>
+        <select id="languageSelect" aria-label="Select Language">
+            <option value="">Select Language</option>
+        </select>
+        <select id="ratingSelect" aria-label="Select Rating">
+            <option value="">Select Minimum Rating</option>
+            <option value="5">5+</option>
+            <option value="6">6+</option>
+            <option value="7">7+</option>
+            <option value="8">8+</option>
+            <option value="9">9+</option>
+        </select>
         <button onclick="fetchResults()">Search</button>
         <ul id="results"></ul>
 
@@ -178,19 +189,44 @@
             }
         }
 
+        // Populate languages
+        async function fetchLanguages() {
+            const languageSelect = document.getElementById('languageSelect');
+            if (languageSelect.options.length > 1) return; // Prevent re-fetching
+
+            try {
+                const response = await fetch(`${API_URL}/configuration/languages?api_key=${API_KEY}`);
+                const data = await response.json();
+                data.forEach(language => {
+                    const option = document.createElement('option');
+                    option.value = language.iso_639_1;
+                    option.textContent = language.name;
+                    languageSelect.appendChild(option);
+                });
+            } catch (error) {
+                console.error('Error fetching languages:', error);
+            }
+        }
+
         // Fetch results
         async function fetchResults(page = 1) {
             const searchType = document.getElementById('searchType').value;
             const searchInput = document.getElementById('searchInput').value;
             const genreInput = document.getElementById('genreSelect').value;
             const yearInput = document.getElementById('yearSelect').value;
+            const languageInput = document.getElementById('languageSelect').value;
+            const ratingInput = document.getElementById('ratingSelect').value;
 
             let query = `${API_URL}/discover/${searchType}?api_key=${API_KEY}&language=en-US&page=${page}&sort_by=release_date.desc`;
 
             if (searchInput) query += `&query=${searchInput}`;
             if (genreInput) query += `&with_genres=${genreInput}`;
             if (yearInput) query += `&primary_release_year=${yearInput}`;
-            else query += `&primary_release_date.lte=${currentYear}-12-31`; // Ensure no future movies are shown
+            if (languageInput) query += `&language=${languageInput}`;
+            if (ratingInput) query += `&vote_average.gte=${ratingInput}`;
+
+            // Ensure no future movies are shown
+            query += `&primary_release_date.lte=${currentYear}-12-31`;
 
             try {
                 const response = await fetch(query);
@@ -222,19 +258,15 @@
                 const poster = item.poster_path ? `<img src="${IMAGE_URL + item.poster_path}" alt="${item.title || item.name}">` : '';
                 const title = `<h3>${item.title || item.name}</h3>`;
                 const releaseDate = `<p>Year: ${new Date(item.release_date || item.first_air_date).getFullYear()}</p>`;
-
-                // Rating (if available)
-                const rating = item.vote_average ? `<div class="rating">Rating: ${item.vote_average.toFixed(1)}</div>` : '';
-
-                // Language (if available)
-                const language = item.original_language ? `<div class="language">Language: ${item.original_language.toUpperCase()}</div>` : '';
+                const rating = item.vote_average ? `<p class="rating">Rating: ${item.vote_average}</p>` : '';
+                const language = item.original_language ? `<p class="language">Language: ${item.original_language.toUpperCase()}</p>` : '';
 
                 resultItem.innerHTML = `${poster}${title}${releaseDate}${rating}${language}`;
                 results.appendChild(resultItem);
             });
         }
 
-        // Setup pagination
+        // Set up pagination
         function setupPagination() {
             const pagination = document.getElementById('pagination');
             pagination.innerHTML = '';
@@ -254,11 +286,20 @@
             }
         }
 
-        // Populate genres and years on page load
+        // Populate genres, languages, and years on page load
         window.onload = () => {
             fetchGenres();
+            fetchLanguages();
             populateYearSelect();
+            fetchResults();
         };
+
+        // Fetch genres and languages dynamically when search type changes
+        document.getElementById('searchType').addEventListener('change', () => {
+            fetchGenres();
+            fetchLanguages();
+            populateYearSelect();
+        });
     </script>
 </body>
 </html>
